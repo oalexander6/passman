@@ -1,0 +1,2 @@
+passman-config.*
+!passman-config.*.template

@@ -1,0 +1,6 @@
+{
+    "HOST": "localhost:8080",
+    "DEBUG": true,
+    "ENC_IV": "",
+    "ENC_KEY": ""
+}
