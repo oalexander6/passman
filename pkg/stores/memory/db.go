@@ -4,7 +4,7 @@ import (
 	"github.com/oalexander6/passman/pkg/entities"
 )
 
-// Memory store is an in-memory store only to be used for testing and mocking.
+// MemoryStore is an in-memory store only to be used for testing and mocking.
 type MemoryStore struct {
 	NotesStore *MemoryNotesStore
 	Data       *MemoryStoreData

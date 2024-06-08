@@ -9,6 +9,7 @@ import (
 	"github.com/oalexander6/passman/pkg/services"
 )
 
+// GinBinding represents an instance of a Gin application and the associated configuration.
 type GinBinding struct {
 	services   *services.Services
 	debugMode  bool
@@ -17,7 +18,6 @@ type GinBinding struct {
 	app        *gin.Engine
 }
 
-// New initializes an instance of GinBinding with the provided values.
 func New(services *services.Services, listenAddr string, debugMode bool, secretKey string) *GinBinding {
 	ginBinding := &GinBinding{
 		services:   services,
@@ -45,6 +45,7 @@ func New(services *services.Services, listenAddr string, debugMode bool, secretK
 }
 
 // Run starts the application with the provided configuration.
+// It returns an error if the application crashes.
 func (b *GinBinding) Run() error {
 	return b.app.Run(b.listenAddr)
 }

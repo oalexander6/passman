@@ -5,6 +5,8 @@ import (
 	"github.com/oalexander6/passman/pkg/entities"
 )
 
+// Services represents the services available to the application that implement
+// functionality.
 type Services struct {
 	noteStore entities.NoteStore
 	config    *config.Config
