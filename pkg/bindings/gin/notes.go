@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/entities"
+	"github.com/oalexander6/passman/pkg/pages"
 )
 
 func (b *GinBinding) GetAllNotes(ctx *gin.Context) {
@@ -112,4 +113,8 @@ func (b *GinBinding) DeleteNote(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{})
+}
+
+func (b *GinBinding) ViewHomePage(ctx *gin.Context) {
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Home())
 }

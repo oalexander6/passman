@@ -1,2 +1,3 @@
 passman-config.*
 !passman-config.*.template
+*_templ.go

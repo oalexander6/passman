@@ -3,28 +3,29 @@ package gin_binding
 import (
 	"net/http"
 
+	"github.com/a-h/templ"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/oalexander6/passman/pkg/config"
 	"github.com/oalexander6/passman/pkg/services"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 // GinBinding represents an instance of a Gin application and the associated configuration.
 type GinBinding struct {
-	services   *services.Services
-	debugMode  bool
-	secretKey  string
-	listenAddr string
-	app        *gin.Engine
+	services *services.Services
+	config   *config.Config
+	app      *gin.Engine
 }
 
-func New(services *services.Services, listenAddr string, debugMode bool, secretKey string) *GinBinding {
+func New(services *services.Services, conf *config.Config) *GinBinding {
 	ginBinding := &GinBinding{
-		services:   services,
-		debugMode:  debugMode,
-		secretKey:  secretKey,
-		listenAddr: listenAddr,
+		services: services,
+		config:   conf,
 	}
 
-	if debugMode {
+	if conf.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
@@ -37,6 +38,8 @@ func New(services *services.Services, listenAddr string, debugMode bool, secretK
 
 	ginBinding.app = app
 
+	ginBinding.setupAuthMiddleware()
+	ginBinding.setupCSRFMiddleware()
 	ginBinding.attachHandlers()
 
 	return ginBinding
@@ -45,13 +48,11 @@ func New(services *services.Services, listenAddr string, debugMode bool, secretK
 // Run starts the application with the provided configuration.
 // It returns an error if the application crashes.
 func (b *GinBinding) Run() error {
-	return b.app.Run(b.listenAddr)
+	return b.app.Run(b.config.Host)
 }
 
 func (b *GinBinding) attachHandlers() {
-	b.app.GET("/", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "OK")
-	})
+	b.app.GET("/", b.ViewHomePage)
 
 	notesGroup := b.app.Group("/notes")
 	{
@@ -61,4 +62,54 @@ func (b *GinBinding) attachHandlers() {
 		notesGroup.PUT(":id", b.UpdateNote)
 		notesGroup.DELETE(":id", b.DeleteNote)
 	}
+}
+
+func (b *GinBinding) setupAuthMiddleware() {
+	store := cookie.NewStore([]byte(b.config.SecretKey))
+	store.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	b.app.Use(sessions.Sessions(b.config.CookieName, store))
+}
+
+func (b *GinBinding) setupCSRFMiddleware() {
+	csrfIgnoreMethods := []string{"GET", "HEAD", "OPTIONS"}
+
+	if !b.config.UseCSRFTokens {
+		csrfIgnoreMethods = append(csrfIgnoreMethods, "POST")
+	}
+
+	b.app.Use(csrf.Middleware(csrf.Options{
+		IgnoreMethods: csrfIgnoreMethods,
+		Secret:        b.config.CSRFSecret,
+		ErrorFunc: func(c *gin.Context) {
+			sendJSONOrRedirect(
+				c,
+				http.StatusBadRequest,
+				&gin.H{},
+				"/",
+			)
+		},
+	}))
+}
+
+func sendJSONOrHTML(ctx *gin.Context, status int, data *gin.H, template templ.Component) {
+	if ctx.GetHeader("Accept") == "application/json" {
+		ctx.JSON(status, &data)
+		return
+	}
+
+	template.Render(ctx, ctx.Writer)
+}
+
+func sendJSONOrRedirect(ctx *gin.Context, status int, data *gin.H, target string) {
+	if ctx.GetHeader("Accept") == "application/json" {
+		ctx.JSON(status, &data)
+		return
+	}
+
+	ctx.Redirect(http.StatusFound, target)
 }

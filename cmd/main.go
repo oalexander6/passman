@@ -10,9 +10,10 @@ import (
 )
 
 func main() {
+	conf := config.GetConfig()
 	memoryStore := memory_store.New()
-	services := services.New(config.GetConfig(), memoryStore.NotesStore)
-	app := gin_binding.New(services, ":8000", true, "asdf1234")
+	services := services.New(conf, memoryStore.NotesStore)
+	app := gin_binding.New(services, conf)
 
 	log.Fatal(app.Run())
 }

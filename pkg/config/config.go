@@ -11,10 +11,14 @@ import (
 )
 
 type Config struct {
-	Host   string `mapstructure:"HOST" json:"HOST"`
-	Debug  bool   `mapstructure:"DEBUG" json:"DEBUG"`
-	EncIV  string `mapstructure:"ENC_IV" json:"ENC_IV"`
-	EncKey string `mapstructure:"ENC_KEY" json:"ENC_KEY"`
+	Host          string `mapstructure:"HOST" json:"HOST"`
+	Debug         bool   `mapstructure:"DEBUG" json:"DEBUG"`
+	EncIV         string `mapstructure:"ENC_IV" json:"-"`
+	EncKey        string `mapstructure:"ENC_KEY" json:"-"`
+	SecretKey     string `mapstructure:"SECRET_KEY" json:"-"`
+	CookieName    string `mapstructure:"COOKIE_NAME" json:"COOKIE_NAME"`
+	UseCSRFTokens bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
+	CSRFSecret    string `mapstructure:"CSRF_SECRET" json:"-"`
 }
 
 var (
@@ -45,6 +49,8 @@ func new() *Config {
 
 	v.SetDefault("HOST", "localhost:8080")
 	v.SetDefault("DEBUG", false)
+	v.SetDefault("USE_CSRF_TOKENS", true)
+	v.SetDefault("COOKIE_NAME", "X-API-KEY")
 
 	v.SetConfigName("passman-config")
 	v.AddConfigPath("/etc/passman")
@@ -85,6 +91,14 @@ func (c *Config) validate() error {
 
 	if len(c.EncKey) != 32 {
 		return errors.New("must provide a 32 byte ENC_KEY")
+	}
+
+	if len(c.SecretKey) < 36 {
+		return errors.New("must provide a minimum 36 byte SECRET_KEY")
+	}
+
+	if c.UseCSRFTokens && len(c.CSRFSecret) < 36 {
+		return errors.New("must provide a minimum 36 byte CSRF_SECRET if USE_CSRF_TOKENS is true")
 	}
 
 	return nil
