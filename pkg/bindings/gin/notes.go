@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/entities"
 	"github.com/oalexander6/passman/pkg/pages"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 func (b *GinBinding) GetAllNotes(ctx *gin.Context) {
@@ -116,5 +117,6 @@ func (b *GinBinding) DeleteNote(ctx *gin.Context) {
 }
 
 func (b *GinBinding) ViewHomePage(ctx *gin.Context) {
-	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Home())
+	csrfToken := csrf.GetToken(ctx)
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Home(csrfToken))
 }

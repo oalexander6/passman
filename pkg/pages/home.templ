@@ -1,5 +1,9 @@
 package pages
 
-templ Home() {
-	<p>Hello</p>
+import "github.com/oalexander6/passman/pkg/components"
+
+templ Home(csrfToken string) {
+	@components.Base(true, "Dashboard", csrfToken) {
+		<h1>Hello!</h1>
+	}
 }

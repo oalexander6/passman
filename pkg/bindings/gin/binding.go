@@ -1,6 +1,7 @@
 package gin_binding
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -52,6 +53,9 @@ func (b *GinBinding) Run() error {
 }
 
 func (b *GinBinding) attachHandlers() {
+	b.app.Static("assets", b.config.StaticFilePath)
+	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
+
 	b.app.GET("/", b.ViewHomePage)
 
 	notesGroup := b.app.Group("/notes")

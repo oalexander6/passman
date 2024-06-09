@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -11,14 +12,15 @@ import (
 )
 
 type Config struct {
-	Host          string `mapstructure:"HOST" json:"HOST"`
-	Debug         bool   `mapstructure:"DEBUG" json:"DEBUG"`
-	EncIV         string `mapstructure:"ENC_IV" json:"-"`
-	EncKey        string `mapstructure:"ENC_KEY" json:"-"`
-	SecretKey     string `mapstructure:"SECRET_KEY" json:"-"`
-	CookieName    string `mapstructure:"COOKIE_NAME" json:"COOKIE_NAME"`
-	UseCSRFTokens bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
-	CSRFSecret    string `mapstructure:"CSRF_SECRET" json:"-"`
+	Host           string `mapstructure:"HOST" json:"HOST"`
+	Debug          bool   `mapstructure:"DEBUG" json:"DEBUG"`
+	EncIV          string `mapstructure:"ENC_IV" json:"-"`
+	EncKey         string `mapstructure:"ENC_KEY" json:"-"`
+	SecretKey      string `mapstructure:"SECRET_KEY" json:"-"`
+	CookieName     string `mapstructure:"COOKIE_NAME" json:"COOKIE_NAME"`
+	UseCSRFTokens  bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
+	CSRFSecret     string `mapstructure:"CSRF_SECRET" json:"-"`
+	StaticFilePath string `mapstructure:"STATIC_FILE_PATH" json:"STATIC_FILE_PATH"`
 }
 
 var (
@@ -60,6 +62,8 @@ func new() *Config {
 	if err != nil {
 		log.Fatal("Somehow failed to get the working directory")
 	}
+	v.SetDefault("STATIC_FILE_PATH", fmt.Sprintf("%s/dist/public/assets", projectDir))
+
 	v.AddConfigPath(projectDir)
 
 	v.AutomaticEnv()
