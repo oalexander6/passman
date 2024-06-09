@@ -1,11 +1,9 @@
 package gin_binding
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oalexander6/passman/pkg/entities"
 	"github.com/oalexander6/passman/pkg/services"
 )
 
@@ -50,58 +48,17 @@ func (b *GinBinding) Run() error {
 	return b.app.Run(b.listenAddr)
 }
 
-// attachHandlers adds the handlers to the underlying Gin app.
 func (b *GinBinding) attachHandlers() {
 	b.app.GET("/", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "OK")
 	})
 
-	b.app.GET("/notes", func(ctx *gin.Context) {
-		notes, err := b.services.GetAllNotes(ctx)
-		if err != nil {
-			ctx.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"notes": notes,
-		})
-	})
-
-	b.app.GET("/notes/:id", func(ctx *gin.Context) {
-		noteID := ctx.Param("id")
-
-		note, err := b.services.GetNoteByID(ctx, noteID)
-		if err != nil {
-			if errors.Is(err, entities.ErrNotFound) {
-				ctx.AbortWithStatus(http.StatusNotFound)
-				return
-			}
-			ctx.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"note": note,
-		})
-	})
-
-	b.app.POST("/notes", func(ctx *gin.Context) {
-		var noteInput entities.NoteInput
-
-		if err := ctx.ShouldBind(&noteInput); err != nil {
-			ctx.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-
-		savedNote, err := b.services.CreateNote(ctx, noteInput)
-		if err != nil {
-			ctx.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		ctx.JSON(http.StatusCreated, gin.H{
-			"note": savedNote,
-		})
-	})
+	notesGroup := b.app.Group("/notes")
+	{
+		notesGroup.GET("", b.GetAllNotes)
+		notesGroup.GET(":id", b.GetNoteByID)
+		notesGroup.POST("", b.CreateNote)
+		notesGroup.PUT(":id", b.UpdateNote)
+		notesGroup.DELETE(":id", b.DeleteNote)
+	}
 }

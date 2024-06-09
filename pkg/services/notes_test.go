@@ -230,8 +230,8 @@ func TestCreateNote(t *testing.T) {
 		t.Fatal("Unexpected error")
 	}
 
-	if result.Value != encryptedVal {
-		t.Fatal("Result expected to contain encrypted value")
+	if result.Value != secureNoteInput.Value {
+		t.Fatal("Result expected to contain unencrypted value")
 	}
 
 	if m.Data.Notes[1].Value != encryptedVal {

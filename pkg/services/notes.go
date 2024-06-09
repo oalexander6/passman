@@ -40,23 +40,29 @@ func (s *Services) GetAllNotes(ctx context.Context) ([]entities.Note, error) {
 		return []entities.Note{}, err
 	}
 
-	for i, note := range notes {
-		if note.Secure {
-			decryptedVal, err := s.Decyrpt([]byte(note.Value))
+	unencryptedNotes := make([]entities.Note, len(notes))
+
+	for i := range notes {
+		unencryptedNotes[i] = notes[i]
+
+		if notes[i].Secure {
+			decryptedVal, err := s.Decyrpt([]byte(notes[i].Value))
 			if err != nil {
 				return []entities.Note{}, entities.ErrDecryptFailed
 			}
 
-			notes[i].Value = decryptedVal
+			unencryptedNotes[i].Value = decryptedVal
 		}
 	}
 
-	return notes, nil
+	return unencryptedNotes, nil
 }
 
 // CreateNote saves a new note. It will encrypt the value of the note if it is marked as secure.
 // Returns an error if the note fails to save.
 func (s *Services) CreateNote(ctx context.Context, noteInput entities.NoteInput) (entities.Note, error) {
+	unencryptedVal := noteInput.Value
+
 	if noteInput.Secure {
 		encVal, err := s.Encrypt([]byte(noteInput.Value))
 		if err != nil {
@@ -65,13 +71,23 @@ func (s *Services) CreateNote(ctx context.Context, noteInput entities.NoteInput)
 
 		noteInput.Value = encVal
 	}
-	return s.noteStore.Create(ctx, noteInput)
+
+	savedNote, err := s.noteStore.Create(ctx, noteInput)
+	if err != nil {
+		return entities.Note{}, err
+	}
+
+	savedNote.Value = unencryptedVal
+
+	return savedNote, nil
 }
 
 // UpdateNote updates the note that matches the provided note's ID. It will encrypt the provided
 // value if the note is marked as secure.
 // Returns an error if no note with the provided ID is found.
 func (s *Services) UpdateNote(ctx context.Context, note entities.Note) (entities.Note, error) {
+	unencryptedVal := note.Value
+
 	if note.Secure {
 		encVal, err := s.Encrypt([]byte(note.Value))
 		if err != nil {
@@ -81,7 +97,14 @@ func (s *Services) UpdateNote(ctx context.Context, note entities.Note) (entities
 		note.Value = encVal
 	}
 
-	return s.noteStore.Update(ctx, note)
+	savedNote, err := s.noteStore.Update(ctx, note)
+	if err != nil {
+		return entities.Note{}, err
+	}
+
+	savedNote.Value = unencryptedVal
+
+	return savedNote, nil
 }
 
 // DeleteNoteByID will remove the note with the provided ID.
