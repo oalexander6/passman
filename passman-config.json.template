@@ -1,6 +1,10 @@
 {
-    "HOST": "localhost:8080",
+    "HOST": "localhost:8000",
     "DEBUG": true,
     "ENC_IV": "",
-    "ENC_KEY": ""
+    "ENC_KEY": "",
+    "SECRET_KEY": "",
+    "USE_CSRF_TOKENS": true,
+    "CSRF_SECRET": "",
+    "COOKIE_NAME": "X-API-KEY"
 }
