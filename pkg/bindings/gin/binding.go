@@ -103,6 +103,9 @@ func (b *GinBinding) setupCSRFMiddleware() {
 	}))
 }
 
+// sendJSONOrHTML sends the provided status and either the JSON data or the HTML component
+// based on the request's 'Accept' header. A value of 'application/json' will result in
+// JSON, all others will result in a HTML response.
 func sendJSONOrHTML(ctx *gin.Context, status int, data *gin.H, template templ.Component) {
 	if ctx.GetHeader("Accept") == "application/json" {
 		ctx.JSON(status, &data)
@@ -112,6 +115,9 @@ func sendJSONOrHTML(ctx *gin.Context, status int, data *gin.H, template templ.Co
 	template.Render(ctx, ctx.Writer)
 }
 
+// sendJSONOrRedirect sends the provided status and either the JSON data or a redirect
+// to the provided target based on the request's 'Accept' header. A value of
+// 'application/json' will result in JSON, all others will result in a redirect.
 func sendJSONOrRedirect(ctx *gin.Context, status int, data *gin.H, target string) {
 	if ctx.GetHeader("Accept") == "application/json" {
 		ctx.JSON(status, &data)
