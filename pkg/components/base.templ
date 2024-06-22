@@ -312,7 +312,7 @@ templ navbar(activePage string) {
 			</nav>
 			<header class="py-10 bg-gray-800">
 				<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-					<h1 class="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+					<h1 class="text-3xl font-bold tracking-tight text-white">{ activePage }</h1>
 				</div>
 			</header>
 		</div>
@@ -336,7 +336,7 @@ templ Base(activePage string) {
 			<title>Passman</title>
 			<link rel="stylesheet" href="/assets/styles.css"/>
 			<script src="//unpkg.com/alpinejs" defer></script>
-			// <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 		</head>
 		<body class="h-full">
 			@navbar(activePage) {
