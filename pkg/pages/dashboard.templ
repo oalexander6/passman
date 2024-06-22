@@ -1,0 +1,20 @@
+package pages
+
+import (
+	"github.com/oalexander6/passman/pkg/entities"
+	"github.com/oalexander6/passman/pkg/components"
+)
+
+templ Dashboard(notes []entities.Note) {
+	@components.Base("Dashboard") {
+		<ul role="list" class="divide-y divide-gray-100">
+			if len(notes) == 0 {
+				<p>No notes yet</p>
+			} else {
+				for _, note := range(notes) {
+					@components.NoteListItem(note)
+				}
+			}
+		</ul>
+	}
+}

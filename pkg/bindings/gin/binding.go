@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/config"
+	"github.com/oalexander6/passman/pkg/pages"
 	"github.com/oalexander6/passman/pkg/services"
 	csrf "github.com/utrack/gin-csrf"
 )
@@ -56,6 +57,8 @@ func (b *GinBinding) attachHandlers() {
 	b.app.Static("assets", b.config.StaticFilePath)
 	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
 
+	b.app.GET("/unauthorized", b.ViewUnauthorizedPage)
+	b.app.GET("/error", b.ViewErrorPage)
 	b.app.GET("/", b.ViewHomePage)
 
 	notesGroup := b.app.Group("/notes")
@@ -94,7 +97,7 @@ func (b *GinBinding) setupCSRFMiddleware() {
 				c,
 				http.StatusBadRequest,
 				&gin.H{},
-				"/",
+				"/unauthorized",
 			)
 		},
 	}))
@@ -116,4 +119,12 @@ func sendJSONOrRedirect(ctx *gin.Context, status int, data *gin.H, target string
 	}
 
 	ctx.Redirect(http.StatusFound, target)
+}
+
+func (b *GinBinding) ViewUnauthorizedPage(ctx *gin.Context) {
+	sendJSONOrHTML(ctx, http.StatusUnauthorized, &gin.H{}, pages.NotAuthorized())
+}
+
+func (b *GinBinding) ViewErrorPage(ctx *gin.Context) {
+	sendJSONOrHTML(ctx, http.StatusInternalServerError, &gin.H{}, pages.Error())
 }

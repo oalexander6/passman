@@ -1,4 +1,6 @@
 passman-config.*
 !passman-config.*.template
 *_templ.go
-./dist
+dist/
+main
+tmp/

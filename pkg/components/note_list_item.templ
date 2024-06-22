@@ -1,0 +1,96 @@
+package components
+
+import (
+	"fmt"
+	"github.com/oalexander6/passman/pkg/entities"
+)
+
+func getCopyClickHandler(noteValue string) string {
+	return fmt.Sprintf("copyClicked = true; navigator.clipboard.writeText('%s')", noteValue)
+}
+
+templ NoteListItem(note entities.Note) {
+	<li class="flex justify-between gap-x-6 py-5">
+		<div class="flex min-w-0 gap-x-4">
+			<div class="text-gray-500">
+				if note.Secure {
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-6 flex-none rounded-full bg-gray-50 mt-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"></path>
+					</svg>
+				} else {
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-6 flex-none rounded-full bg-gray-50 mt-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"></path>
+					</svg>
+				}
+			</div>
+			<div class="min-w-0 flex-auto">
+				<p class="text-sm font-semibold leading-6 text-gray-900">
+					<a href="#" class="hover:underline">{ note.Name }</a>
+				</p>
+				<p class="mt-1 flex text-xs leading-5 text-gray-500">
+					if note.Secure {
+						Secure Note
+					} else {
+						Not Secure
+					}
+				</p>
+			</div>
+		</div>
+		<div class="flex shrink-0 items-center gap-x-4">
+			<div x-data="{ copyClicked: false }" x-on:click={ getCopyClickHandler(note.Value) } class="text-gray-500 hover:text-gray-900">
+				<svg x-cloak x-show="!copyClicked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5 cursor-pointer">
+					<path fill-rule="evenodd" d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5v-3.379a3 3 0 0 0-.879-2.121l-3.12-3.121a3 3 0 0 0-1.402-.791 2.252 2.252 0 0 1 1.913-1.576A2.25 2.25 0 0 1 12.25 1h1.5a2.25 2.25 0 0 1 2.238 2.012ZM11.5 3.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v.25h-3v-.25Z" clip-rule="evenodd"></path>
+					<path d="M3.5 6A1.5 1.5 0 0 0 2 7.5v9A1.5 1.5 0 0 0 3.5 18h7a1.5 1.5 0 0 0 1.5-1.5v-5.879a1.5 1.5 0 0 0-.44-1.06L8.44 6.439A1.5 1.5 0 0 0 7.378 6H3.5Z"></path>
+				</svg>
+				<svg x-cloak x-show="copyClicked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+					<path fill-rule="evenodd" d="M18 5.25a2.25 2.25 0 0 0-2.012-2.238A2.25 2.25 0 0 0 13.75 1h-1.5a2.25 2.25 0 0 0-2.238 2.012c-.875.092-1.6.686-1.884 1.488H11A2.5 2.5 0 0 1 13.5 7v7h2.25A2.25 2.25 0 0 0 18 11.75v-6.5ZM12.25 2.5a.75.75 0 0 0-.75.75v.25h3v-.25a.75.75 0 0 0-.75-.75h-1.5Z" clip-rule="evenodd"></path>
+					<path fill-rule="evenodd" d="M3 6a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H3Zm6.874 4.166a.75.75 0 1 0-1.248-.832l-2.493 3.739-.853-.853a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.154-.114l3-4.5Z" clip-rule="evenodd"></path>
+				</svg>
+			</div>
+			<div class="relative flex-none" x-data="{ showOptions: false }" x-on:click.outside="showOptions = false">
+				<button
+					x-on:click="showOptions = !showOptions"
+					type="button"
+					class="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900 cursor-pointer"
+					id={ "options-menu-" + note.ID + "-button" }
+					aria-expanded="{ showOptions }"
+					aria-haspopup="true"
+				>
+					<span class="sr-only">Open options</span>
+					<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+						<path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z"></path>
+					</svg>
+				</button>
+				<!--
+                    Dropdown menu, show/hide based on menu state.
+
+                    Entering: "transition ease-out duration-100"
+                    From: "transform opacity-0 scale-95"
+                    To: "transform opacity-100 scale-100"
+                    Leaving: "transition ease-in duration-75"
+                    From: "transform opacity-100 scale-100"
+                    To: "transform opacity-0 scale-95"
+                -->
+				<div
+					x-cloak
+					x-show="showOptions"
+					class="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none"
+					role="menu"
+					aria-orientation="vertical"
+					aria-labelledby={ "options-menu-" + note.ID + "-button" }
+					tabindex="-1"
+					x-transition:enter="transition ease-out duration-100"
+					x-transition:enter-start="transform opacity-0 scale-95"
+					x-transition:enter-end="transform opacity-100 scale-100"
+					x-transition:leave="transition ease-in duration-75"
+					x-transition:leave-start="transform opacity-100 scale-100"
+					x-transition:leave-end="transform opacity-0 scale-95"
+				>
+					<!-- Active: "bg-gray-50", Not Active: "" -->
+					<a href="#" class="block px-3 py-1 text-sm leading-6 text-gray-900" role="menuitem" tabindex="-1" id="options-menu-0-item-0">View profile<span class="sr-only">, Leslie Alexander</span></a>
+					<a href="#" class="block px-3 py-1 text-sm leading-6 text-gray-900" role="menuitem" tabindex="-1" id="options-menu-0-item-1">Message<span class="sr-only">, Leslie Alexander</span></a>
+				</div>
+			</div>
+		</div>
+	</li>
+}

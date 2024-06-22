@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oalexander6/passman/pkg/components"
 	"github.com/oalexander6/passman/pkg/entities"
 	"github.com/oalexander6/passman/pkg/pages"
 )
@@ -56,9 +57,14 @@ func (b *GinBinding) CreateNote(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"note": savedNote,
-	})
+	sendJSONOrHTML(
+		ctx,
+		http.StatusCreated,
+		&gin.H{
+			"note": savedNote,
+		},
+		components.NoteListItem(savedNote),
+	)
 }
 
 func (b *GinBinding) UpdateNote(ctx *gin.Context) {
@@ -116,5 +122,11 @@ func (b *GinBinding) DeleteNote(ctx *gin.Context) {
 }
 
 func (b *GinBinding) ViewHomePage(ctx *gin.Context) {
-	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Home("Dashboard"))
+	notes, err := b.services.GetAllNotes(ctx)
+	if err != nil {
+		sendJSONOrHTML(ctx, http.StatusInternalServerError, &gin.H{}, pages.Error())
+		return
+	}
+
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Dashboard(notes))
 }
