@@ -1,7 +1,7 @@
 clean:
 	rm -rf ./tmp ./dist
 
-dev:
+dev: templates styles
 	echo "To enable hot reloading of templates, run 'make templates-watch' in another terminal"
 	air
 
@@ -11,9 +11,11 @@ build: templates styles
 run:
 	./dist/passman
 
-templates:
-	templ fmt ./pkg
+templates: templates-format
 	templ generate -path=./pkg
+
+templates-format:
+	templ fmt ./pkg
 
 templates-watch:
 	templ generate -path=./pkg -watch

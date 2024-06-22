@@ -3,6 +3,7 @@ package services_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -20,7 +21,9 @@ var testConfig = &config.Config{
 func TestGenerateRandomString(t *testing.T) {
 	s := services.New(testConfig, nil)
 
-	val, err := s.GenerateRandomString(12)
+	const validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!.?#"
+
+	val, err := s.GenerateRandomString(12, validCharacters)
 	if err != nil {
 		t.FailNow()
 	}
@@ -29,7 +32,7 @@ func TestGenerateRandomString(t *testing.T) {
 		t.Fatal("Random string of length 12 was expected")
 	}
 
-	newVal, err := s.GenerateRandomString(12)
+	newVal, err := s.GenerateRandomString(12, validCharacters)
 	if err != nil {
 		t.FailNow()
 	}
@@ -38,13 +41,29 @@ func TestGenerateRandomString(t *testing.T) {
 		t.Fatal("Expected different random string from subsequent call")
 	}
 
-	longVal, err := s.GenerateRandomString(256)
+	for _, char := range newVal {
+		if !strings.ContainsRune(validCharacters, char) {
+			t.Fatalf("Invalid character found: %c", char)
+		}
+	}
+
+	longVal, err := s.GenerateRandomString(256, validCharacters)
 	if err != nil {
 		t.FailNow()
 	}
 
 	if len(longVal) != 256 {
 		t.Fatal("Random string of length 256 was expected")
+	}
+
+	for _, char := range newVal {
+		if !strings.ContainsRune(validCharacters, char) {
+			t.Fatalf("Invalid character found: %c", char)
+		}
+	}
+
+	if _, err = s.GenerateRandomString(10, ""); err == nil {
+		t.Fatal("Expected 'must provide at least one valid character' error")
 	}
 }
 

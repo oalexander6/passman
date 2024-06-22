@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"math/big"
 
 	"github.com/oalexander6/passman/pkg/entities"
@@ -114,10 +115,12 @@ func (s *Services) DeleteNoteByID(ctx context.Context, id entities.ID) error {
 }
 
 // GenerateRandomString returns a cryptographically secure random string of the provided length.
-func (s *Services) GenerateRandomString(length int) (string, error) {
-	result := make([]byte, length)
+func (s *Services) GenerateRandomString(length int, validCharacters string) (string, error) {
+	if len(validCharacters) == 0 {
+		return "", errors.New("must provide at least one valid character")
+	}
 
-	const validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!.?#"
+	result := make([]byte, length)
 
 	for i := range result {
 		charIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(validCharacters))))
