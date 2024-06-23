@@ -13,9 +13,9 @@ type Note struct {
 
 // NoteInput represents the data required to create a new note.
 type NoteInput struct {
-	Name   string `json:"name" binding:"required"`
-	Value  string `json:"value" binding:"required"`
-	Secure bool   `json:"secure"`
+	Name   string `json:"name" form:"name" binding:"required"`
+	Value  string `json:"value" form:"value" binding:"required"`
+	Secure bool   `json:"secure" form:"secure"`
 }
 
 // NoteStore defines the interface required to implement persistent storage functionality
