@@ -25,14 +25,6 @@ templ Dashboard(notes []entities.Note, csrfToken string) {
 				@components.NoteNewModal(csrfToken)
 			</div>
 		</div>
-		<ul role="list" class="divide-y divide-gray-500 mt-4">
-			if len(notes) == 0 {
-				<p class="text-gray-100">No passwords yet</p>
-			} else {
-				for _, note := range(notes) {
-					@components.NoteListItem(note, csrfToken)
-				}
-			}
-		</ul>
+		@components.NoteList(notes, csrfToken)
 	}
 }

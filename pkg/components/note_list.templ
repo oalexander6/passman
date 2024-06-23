@@ -1,0 +1,14 @@
+package components
+
+import "github.com/oalexander6/passman/pkg/entities"
+
+templ NoteList(notes []entities.Note, csrfToken string) {
+	<ul role="list" class="divide-y divide-gray-500 mt-4" id="password-list">
+		if len(notes) == 0 {
+			<p class="text-gray-100">No passwords yet</p>
+		}
+		for _, note := range(notes) {
+			@NoteListItem(note, csrfToken)
+		}
+	</ul>
+}

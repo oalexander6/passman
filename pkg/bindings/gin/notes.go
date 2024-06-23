@@ -58,7 +58,15 @@ func (b *GinBinding) CreateNote(ctx *gin.Context) {
 		return
 	}
 
-	sendJSONOrRedirect(ctx, http.StatusCreated, &gin.H{"note": savedNote}, "/")
+	notes, err := b.services.GetAllNotes(ctx.Request.Context())
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	csrfToken := csrf.GetToken(ctx)
+
+	sendJSONOrHTML(ctx, http.StatusCreated, &gin.H{"note": savedNote}, components.NoteList(notes, csrfToken))
 }
 
 func (b *GinBinding) UpdateNote(ctx *gin.Context) {

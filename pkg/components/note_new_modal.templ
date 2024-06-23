@@ -48,7 +48,7 @@ templ NoteNewModal(csrfToken string) {
 					x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
 					x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
 				>
-					<form action="/notes" method="POST">
+					<form hx-post="/notes" hx-target="#password-list" hx-swap="outerHTML">
 						<input type="hidden" name="_csrf" id="_csrf" value={ csrfToken }/>
 						<div class="space-y-12">
 							<div class="border-b border-white/10 pb-12">
@@ -85,7 +85,7 @@ templ NoteNewModal(csrfToken string) {
 						</div>
 						<div class="mt-6 flex items-center justify-end gap-x-6">
 							<button x-on:click="showNewPasswordModal = false" type="button" class="text-sm font-semibold leading-6 text-white">Cancel</button>
-							<button type="submit" class="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Save</button>
+							<button x-on:click="showNewPasswordModal = false" type="submit" class="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Save</button>
 						</div>
 					</form>
 				</div>
