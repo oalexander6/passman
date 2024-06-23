@@ -40,8 +40,7 @@ func New(services *services.Services, conf *config.Config) *GinBinding {
 
 	ginBinding.app = app
 
-	ginBinding.setupAuthMiddleware()
-	ginBinding.setupCSRFMiddleware()
+	ginBinding.attachMiddleware()
 	ginBinding.attachHandlers()
 
 	return ginBinding
@@ -71,7 +70,7 @@ func (b *GinBinding) attachHandlers() {
 	}
 }
 
-func (b *GinBinding) setupAuthMiddleware() {
+func (b *GinBinding) attachMiddleware() {
 	store := cookie.NewStore([]byte(b.config.SecretKey))
 	store.Options(sessions.Options{
 		Path:     "/",
@@ -79,12 +78,10 @@ func (b *GinBinding) setupAuthMiddleware() {
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
+
 	b.app.Use(sessions.Sessions(b.config.CookieName, store))
-}
 
-func (b *GinBinding) setupCSRFMiddleware() {
 	csrfIgnoreMethods := []string{"GET", "HEAD", "OPTIONS"}
-
 	if !b.config.UseCSRFTokens {
 		csrfIgnoreMethods = append(csrfIgnoreMethods, "POST")
 	}
@@ -93,12 +90,7 @@ func (b *GinBinding) setupCSRFMiddleware() {
 		IgnoreMethods: csrfIgnoreMethods,
 		Secret:        b.config.CSRFSecret,
 		ErrorFunc: func(c *gin.Context) {
-			sendJSONOrRedirect(
-				c,
-				http.StatusBadRequest,
-				&gin.H{},
-				"/unauthorized",
-			)
+			c.AbortWithStatus(http.StatusBadRequest)
 		},
 	}))
 }

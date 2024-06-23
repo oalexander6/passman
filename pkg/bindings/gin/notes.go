@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oalexander6/passman/pkg/components"
 	"github.com/oalexander6/passman/pkg/entities"
 	"github.com/oalexander6/passman/pkg/pages"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 func (b *GinBinding) GetAllNotes(ctx *gin.Context) {
@@ -56,22 +58,7 @@ func (b *GinBinding) CreateNote(ctx *gin.Context) {
 		return
 	}
 
-	// notes, err := b.services.GetAllNotes(ctx)
-	// if err != nil {
-	// 	ctx.AbortWithStatus(http.StatusInternalServerError)
-	// 	return
-	// }
-
 	sendJSONOrRedirect(ctx, http.StatusCreated, &gin.H{"note": savedNote}, "/")
-
-	// sendJSONOrHTML(
-	// 	ctx,
-	// 	http.StatusCreated,
-	// 	&gin.H{
-	// 		"note": savedNote,
-	// 	},
-	// 	components.NoteListItem(savedNote),
-	// )
 }
 
 func (b *GinBinding) UpdateNote(ctx *gin.Context) {
@@ -103,9 +90,9 @@ func (b *GinBinding) UpdateNote(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"note": updatedNote,
-	})
+	csrfToken := csrf.GetToken(ctx)
+
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"note": updatedNote}, components.NoteListItem(updatedNote, csrfToken))
 }
 
 func (b *GinBinding) DeleteNote(ctx *gin.Context) {
@@ -135,5 +122,7 @@ func (b *GinBinding) ViewHomePage(ctx *gin.Context) {
 		return
 	}
 
-	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Dashboard(notes))
+	csrfToken := csrf.GetToken(ctx)
+
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Dashboard(notes, csrfToken))
 }

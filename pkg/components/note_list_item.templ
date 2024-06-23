@@ -9,8 +9,8 @@ func getCopyClickHandler(noteValue string) string {
 	return fmt.Sprintf("copyClicked = true; navigator.clipboard.writeText('%s')", noteValue)
 }
 
-templ NoteListItem(note entities.Note) {
-	<li class="flex justify-between gap-x-6 py-5">
+templ NoteListItem(note entities.Note, csrfToken string) {
+	<li class="flex justify-between gap-x-6 py-5" id={ "list-item-" + note.ID }>
 		<div class="flex min-w-0 gap-x-4">
 			<div class="text-gray-300">
 				if note.Secure {
@@ -47,7 +47,7 @@ templ NoteListItem(note entities.Note) {
 					<path fill-rule="evenodd" d="M3 6a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H3Zm6.874 4.166a.75.75 0 1 0-1.248-.832l-2.493 3.739-.853-.853a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.154-.114l3-4.5Z" clip-rule="evenodd"></path>
 				</svg>
 			</div>
-			<div class="relative flex-none" x-data="{ showOptions: false }" x-on:click.outside="showOptions = false">
+			<div class="relative flex-none" x-data="{ showOptions: false, showEditPasswordModal: false }" x-on:click.outside="showOptions = false">
 				<button
 					x-on:click="showOptions = !showOptions"
 					type="button"
@@ -86,9 +86,29 @@ templ NoteListItem(note entities.Note) {
 					x-transition:leave-start="transform opacity-100 scale-100"
 					x-transition:leave-end="transform opacity-0 scale-95"
 				>
-					<!-- Active: "bg-gray-50", Not Active: "" -->
-					<a href="#" class="block px-3 py-1 text-sm leading-6 text-gray-900" role="menuitem" tabindex="-1" id="options-menu-0-item-0">View profile<span class="sr-only">, Leslie Alexander</span></a>
-					<a href="#" class="block px-3 py-1 text-sm leading-6 text-gray-900" role="menuitem" tabindex="-1" id="options-menu-0-item-1">Message<span class="sr-only">, Leslie Alexander</span></a>
+					<button
+						x-on:click="showOptions = false; showEditPasswordModal = true"
+						type="button"
+						class="block px-3 py-1 text-sm leading-6 text-gray-900"
+						role="menuitem"
+						tabindex="-1"
+					>
+						View
+					</button>
+					<button
+						hx-delete={ "/notes/" + note.ID + "?_csrf=" + csrfToken }
+						hx-target={ "#list-item-" + note.ID }
+						hx-swap="delete"
+						type="button"
+						class="block px-3 py-1 text-sm leading-6 text-red-700"
+						role="menuitem"
+						tabindex="-1"
+					>
+						Delete
+					</button>
+				</div>
+				<div x-cloak x-show="showEditPasswordModal">
+					@NoteEditModal(note, csrfToken)
 				</div>
 			</div>
 		</div>
