@@ -4,3 +4,4 @@ passman-config.*
 dist/
 main
 tmp/
+.vscode/
