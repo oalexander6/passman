@@ -120,7 +120,15 @@ func (b *GinBinding) DeleteNote(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	notes, err := b.services.GetAllNotes(ctx.Request.Context())
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	csrfToken := csrf.GetToken(ctx)
+
+	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{}, components.NoteList(notes, csrfToken))
 }
 
 func (b *GinBinding) ViewHomePage(ctx *gin.Context) {

@@ -97,8 +97,8 @@ templ NoteListItem(note entities.Note, csrfToken string) {
 					</button>
 					<button
 						hx-delete={ "/notes/" + note.ID + "?_csrf=" + csrfToken }
-						hx-target={ "#list-item-" + note.ID }
-						hx-swap="delete"
+						hx-target="#password-list"
+						hx-swap="outerHTML"
 						type="button"
 						class="block px-3 py-1 text-sm leading-6 text-red-700"
 						role="menuitem"
