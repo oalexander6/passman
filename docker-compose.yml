@@ -20,9 +20,9 @@ services:
     image: 'traefik:latest'
     container_name: 'traefik'
     command:
-      - "--api.dashboard=true"
+      # - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--api.insecure=true"
+      # - "--api.insecure=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--providers.docker.network=net"
@@ -32,14 +32,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
     volumes:
       - "letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - net
     labels:
-      - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.routers.traefik.service=api@internal"
