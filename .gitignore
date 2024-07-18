@@ -6,3 +6,5 @@ main
 tmp/
 .vscode
 *_templ.txt
+/config/secrets/*
+/config/authelia/*

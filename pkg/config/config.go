@@ -55,8 +55,9 @@ func new() *Config {
 	v.SetDefault("COOKIE_NAME", "X-API-KEY")
 
 	v.SetConfigName("passman-config")
-	v.AddConfigPath("/etc/passman")
+	v.AddConfigPath("/etc/passman/config")
 	v.AddConfigPath("$HOME/.passman")
+	v.AddConfigPath("$PWD/config")
 
 	projectDir, err := os.Getwd()
 	if err != nil {
