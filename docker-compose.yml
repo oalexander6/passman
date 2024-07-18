@@ -13,8 +13,40 @@ secrets:
 volumes:
   pgadmin-data:
   postgres-data:
+  letsencrypt:
 
 services:
+  traefik:
+    image: 'traefik:latest'
+    container_name: 'traefik'
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--api.insecure=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker.network=net"
+      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # - "--certificatesresolvers.myresolver.acme.email=TODO"
+      # - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+      # - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      # - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      # - "traefik.http.middlewares.traefik-auth.basicauth.users=TODO"
+
   authelia:
     container_name: 'authelia'
     image: 'docker.io/authelia/authelia:latest'
@@ -43,8 +75,8 @@ services:
     restart: unless-stopped
     shm_size: 128mb
     secrets: ['POSTGRES_ADMIN_PASSWORD']
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     networks:
       net:
         aliases: []
@@ -57,6 +89,8 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - 'postgres-data:/var/lib/postgresql/data'
+    labels:
+      - "traefik.enable=false"
 
   pgadmin:
     container_name: 'pgadmin'
@@ -69,11 +103,16 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: passman@test.com
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/POSTGRES_ADMIN_PASSWORD
-      PGADMIN_LISTEN_PORT: 8080
-    ports:
-      - 8080:8080
+      PGADMIN_LISTEN_PORT: 8081
+    expose:
+      - 8081
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=8081"
 
 networks:
   net:
