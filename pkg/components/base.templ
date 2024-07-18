@@ -30,10 +30,23 @@ templ normalLink(title string, href string, activePage string) {
 	</a>
 }
 
+templ scripts() {
+	<script type="text/javascript">
+		document.addEventListener('alpine:init', () => {
+			Alpine.data('dropdown', () => ({
+				open: false,
+				toggle() {
+					this.open = !this.open;
+				}
+			}));
+		})
+	</script>
+}
+
 templ navbar(activePage string) {
 	<div class="min-h-full">
 		<div class="pb-32 bg-gray-800">
-			<nav class="bg-gray-800" x-data="{ showMobileMenu: false }" x-on:click.outside="showMobileMenu = false">
+			<nav class="bg-gray-800" x-data="dropdown" x-on:click.outside="toggle">
 				<div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
 					<div class="border-b border-gray-700">
 						<div class="flex h-16 items-center justify-between px-4 sm:px-0">
@@ -92,11 +105,11 @@ templ navbar(activePage string) {
 							<div class="-mr-2 flex md:hidden">
 								<!-- Mobile menu button -->
 								<button
-									x-on:click="showMobileMenu = !showMobileMenu"
+									x-on:click="toggle"
 									type="button"
 									class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
 									aria-controls="mobile-menu"
-									x-bind:aria-expanded="showMobileMenu ? 'true' : 'false'"
+									x-bind:aria-expanded="open"
 								>
 									<span class="absolute -inset-0.5"></span>
 									<span class="sr-only">Open main menu</span>
@@ -114,7 +127,7 @@ templ navbar(activePage string) {
 					</div>
 				</div>
 				<!-- Mobile menu, show/hide based on menu state. -->
-				<div x-cloak x-show="showMobileMenu" class="border-b border-gray-700 md:hidden" id="mobile-menu">
+				<div x-cloak x-show="open" class="border-b border-gray-700 md:hidden" id="mobile-menu">
 					<div class="space-y-1 px-2 py-3 sm:px-3">
 						@mobileLink("Dashboard", "/", activePage)
 					</div>
@@ -175,8 +188,6 @@ templ Base(activePage string) {
 				{ children... }
 			}
 		</body>
-		<script>
-			htmx.logAll();
-		</script>
+		@scripts()
 	</html>
 }
