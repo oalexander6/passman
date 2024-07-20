@@ -5,9 +5,9 @@ import "context"
 // Note represents a note/password, which may be secure or not secure. Secure notes will
 // have their value encrypted upon storage.
 type Note struct {
-	ID     ID     `json:"id" form:"id" binding="required"`
-	Name   string `json:"name" form:"name" binding="required"`
-	Value  string `json:"value" form:"value" binding="required"`
+	ID     ID     `json:"id" form:"id" binding:"required"`
+	Name   string `json:"name" form:"name" binding:"required"`
+	Value  string `json:"value" form:"value" binding:"required"`
 	Secure bool   `json:"secure" form:"secure"`
 }
 

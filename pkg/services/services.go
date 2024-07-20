@@ -8,13 +8,15 @@ import (
 // Services represents the services available to the application that implement
 // functionality.
 type Services struct {
-	noteStore entities.NoteStore
-	config    *config.Config
+	noteStore     entities.NoteStore
+	accountsStore entities.AccountStore
+	config        *config.Config
 }
 
-func New(config *config.Config, noteStore entities.NoteStore) *Services {
+func New(config *config.Config, noteStore entities.NoteStore, accountStore entities.AccountStore) *Services {
 	return &Services{
-		noteStore: noteStore,
-		config:    config,
+		noteStore:     noteStore,
+		accountsStore: accountStore,
+		config:        config,
 	}
 }

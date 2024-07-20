@@ -19,7 +19,7 @@ var testConfig = &config.Config{
 }
 
 func TestGenerateRandomString(t *testing.T) {
-	s := services.New(testConfig, nil)
+	s := services.New(testConfig, nil, nil)
 
 	const validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!.?#"
 
@@ -69,7 +69,7 @@ func TestGenerateRandomString(t *testing.T) {
 
 func TestGetNoteByID(t *testing.T) {
 	m := memory_store.New()
-	s := services.New(testConfig, m.NotesStore)
+	s := services.New(testConfig, m.NotesStore, m.AccountsStore)
 
 	_, err := s.GetNoteByID(context.Background(), uuid.NewString())
 	if !errors.Is(err, entities.ErrNotFound) {
@@ -134,7 +134,7 @@ func TestGetNoteByID(t *testing.T) {
 
 func TestGetAllNotes(t *testing.T) {
 	m := memory_store.New()
-	s := services.New(testConfig, m.NotesStore)
+	s := services.New(testConfig, m.NotesStore, m.AccountsStore)
 
 	result, err := s.GetAllNotes(context.Background())
 	if err != nil {
@@ -206,7 +206,7 @@ func TestGetAllNotes(t *testing.T) {
 
 func TestCreateNote(t *testing.T) {
 	m := memory_store.New()
-	s := services.New(testConfig, m.NotesStore)
+	s := services.New(testConfig, m.NotesStore, m.AccountsStore)
 
 	noteInput := entities.NoteInput{
 		Name:   "My Note",
@@ -260,7 +260,7 @@ func TestCreateNote(t *testing.T) {
 
 func TestDeleteNote(t *testing.T) {
 	m := memory_store.New()
-	s := services.New(testConfig, m.NotesStore)
+	s := services.New(testConfig, m.NotesStore, m.AccountsStore)
 
 	note := entities.Note{
 		ID:     uuid.NewString(),
@@ -286,7 +286,7 @@ func TestDeleteNote(t *testing.T) {
 
 func TestUpdateNote(t *testing.T) {
 	m := memory_store.New()
-	s := services.New(testConfig, m.NotesStore)
+	s := services.New(testConfig, m.NotesStore, m.AccountsStore)
 
 	note1 := entities.Note{
 		ID:     uuid.NewString(),
@@ -351,7 +351,7 @@ func TestUpdateNote(t *testing.T) {
 func TestEncryptDecrypt(t *testing.T) {
 	original := "This is my 32 byte string 123456"
 
-	s := services.New(testConfig, nil)
+	s := services.New(testConfig, nil, nil)
 
 	ciphertext, err := s.Encrypt([]byte(original))
 	if err != nil {
