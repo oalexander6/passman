@@ -19,10 +19,12 @@ services:
   traefik:
     image: 'traefik:latest'
     container_name: 'traefik'
+    depends_on:
+      - authelia
     command:
-      # - "--api.dashboard=true"
+      - "--api.dashboard=true"
       - "--providers.docker=true"
-      # - "--api.insecure=true"
+      - "--api.insecure=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--providers.docker.network=net"
@@ -38,9 +40,13 @@ services:
     networks:
       - net
     labels:
-      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.routers.traefik.service=api@internal"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.api.rule=Host(`traefik.test.com`)'
+      - 'traefik.http.routers.api.entrypoints=https'
+      - 'traefik.http.routers.api.service=api@internal'
+      - 'traefik.http.routers.api.tls=true'
+      - 'traefik.http.routers.api.tls.options=default'
+      - 'traefik.http.routers.api.middlewares=authelia@docker'
       # - "traefik.http.routers.traefik.tls.certresolver=myresolver"
       # - "traefik.http.routers.traefik.middlewares=traefik-auth"
       # - "traefik.http.middlewares.traefik-auth.basicauth.users=TODO"
@@ -66,6 +72,15 @@ services:
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/STORAGE_ENCRYPTION_KEY'
     volumes:
       - '${PWD}/config/authelia:/config'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.authelia.rule=Host(`auth.test.com`)'
+      - 'traefik.http.routers.authelia.entrypoints=https'
+      - 'traefik.http.routers.authelia.tls=true'
+      - 'traefik.http.routers.authelia.tls.options=default'
+      - 'traefik.http.middlewares.authelia.forwardAuth.address=http://authelia:9091/api/authz/forward-auth'
+      - 'traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader=true'
+      - 'traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name'
 
   postgres:
     container_name: 'postgres'
@@ -108,7 +123,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.test.com`)"
       - "traefik.http.routers.pgadmin.entrypoints=web"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=8081"
 

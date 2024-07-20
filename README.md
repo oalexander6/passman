@@ -31,3 +31,19 @@ Secrets must be placed in the `./secrets` folder. The required files must be cre
 4. Create a new database named `authelia`
 5. Create a new user with `CREATE USER authelia WITH PASSWORD 'STORAGE_PASSWORD';`
 6. Grant new user full access to authelia database with `GRANT ALL ON SCHEMA public TO authelia;`
+
+### Creating a Local Certificate for test.com
+1. Add `127.0.0.1 test.com` to `/etc/hosts`
+2. Generate a certificate with 
+```
+openssl req -x509 -out test.com.crt -keyout test.com.key \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=*.test.com' -extensions EXT -config <( \
+   printf "[dn]\nCN=test.com\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:*.test.com\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+```
+3. Install the certificate as a locally trusted certificate
+```
+sudo apt-get install -y ca-certificates
+sudo cp local-ca.crt /usr/local/share/ca-certificates
+sudo update-ca-certificates
+```
