@@ -12,7 +12,7 @@ import (
 func main() {
 	conf := config.GetConfig()
 	memoryStore := memory_store.New()
-	services := services.New(conf, memoryStore.NotesStore)
+	services := services.New(conf, memoryStore.NotesStore, memoryStore.AccountsStore)
 	app := gin_binding.New(services, conf)
 
 	log.Fatal(app.Run())

@@ -5,13 +5,10 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/config"
 	"github.com/oalexander6/passman/pkg/pages"
 	"github.com/oalexander6/passman/pkg/services"
-	csrf "github.com/utrack/gin-csrf"
 )
 
 // GinBinding represents an instance of a Gin application and the associated configuration.
@@ -40,7 +37,6 @@ func New(services *services.Services, conf *config.Config) *GinBinding {
 
 	ginBinding.app = app
 
-	ginBinding.attachMiddleware()
 	ginBinding.attachHandlers()
 
 	return ginBinding
@@ -58,6 +54,21 @@ func (b *GinBinding) attachHandlers() {
 
 	b.app.GET("/unauthorized", b.ViewUnauthorizedPage)
 	b.app.GET("/error", b.ViewErrorPage)
+	b.app.GET("/login", b.ViewLoginPage)
+
+	authHandlers, _ := b.services.Auth.Handlers()
+	auth := gin.WrapH(authHandlers)
+	b.app.Any("/auth/*action", auth)
+
+	authMiddleware := b.services.Auth.Middleware()
+	requireAuth := gin.WrapH(authMiddleware.Auth(b.app.Handler()))
+	b.app.Use(requireAuth)
+	b.app.Use(func(ctx *gin.Context) {
+		if ctx.Writer.Status() > 399 {
+			ctx.Abort()
+		}
+	})
+
 	b.app.GET("/", b.ViewHomePage)
 
 	notesGroup := b.app.Group("/notes")
@@ -68,31 +79,6 @@ func (b *GinBinding) attachHandlers() {
 		notesGroup.PUT(":id", b.UpdateNote)
 		notesGroup.DELETE(":id", b.DeleteNote)
 	}
-}
-
-func (b *GinBinding) attachMiddleware() {
-	store := cookie.NewStore([]byte(b.config.SecretKey))
-	store.Options(sessions.Options{
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
-
-	b.app.Use(sessions.Sessions(b.config.CookieName, store))
-
-	csrfIgnoreMethods := []string{"GET", "HEAD", "OPTIONS"}
-	if !b.config.UseCSRFTokens {
-		csrfIgnoreMethods = append(csrfIgnoreMethods, "POST")
-	}
-
-	b.app.Use(csrf.Middleware(csrf.Options{
-		IgnoreMethods: csrfIgnoreMethods,
-		Secret:        b.config.CSRFSecret,
-		ErrorFunc: func(c *gin.Context) {
-			c.AbortWithStatus(http.StatusBadRequest)
-		},
-	}))
 }
 
 // sendJSONOrHTML sends the provided status and either the JSON data or the HTML component

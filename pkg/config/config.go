@@ -12,15 +12,16 @@ import (
 )
 
 type Config struct {
-	Host           string `mapstructure:"HOST" json:"HOST"`
-	Debug          bool   `mapstructure:"DEBUG" json:"DEBUG"`
-	EncIV          string `mapstructure:"ENC_IV" json:"-"`
-	EncKey         string `mapstructure:"ENC_KEY" json:"-"`
-	SecretKey      string `mapstructure:"SECRET_KEY" json:"-"`
-	CookieName     string `mapstructure:"COOKIE_NAME" json:"COOKIE_NAME"`
-	UseCSRFTokens  bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
-	CSRFSecret     string `mapstructure:"CSRF_SECRET" json:"-"`
-	StaticFilePath string `mapstructure:"STATIC_FILE_PATH" json:"STATIC_FILE_PATH"`
+	Host              string `mapstructure:"HOST" json:"HOST"`
+	Debug             bool   `mapstructure:"DEBUG" json:"DEBUG"`
+	EncIV             string `mapstructure:"ENC_IV" json:"-"`
+	EncKey            string `mapstructure:"ENC_KEY" json:"-"`
+	SecretKey         string `mapstructure:"SECRET_KEY" json:"-"`
+	UseCSRFTokens     bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
+	CSRFSecret        string `mapstructure:"CSRF_SECRET" json:"-"`
+	StaticFilePath    string `mapstructure:"STATIC_FILE_PATH" json:"STATIC_FILE_PATH"`
+	AvatarStoragePath string `mapstructure:"AVATAR_STORAGE_PATH" json:"AVATAR_STORAGE_PATH"`
+	UseSSL            bool   `mapstructure:"USE_SSL" json:"USE_SSL"`
 }
 
 var (
@@ -49,10 +50,11 @@ func new() *Config {
 
 	v.SetEnvPrefix("PASSMAN")
 
-	v.SetDefault("HOST", "localhost:8080")
+	v.SetDefault("HOST", "127.0.0.1:8080")
 	v.SetDefault("DEBUG", false)
 	v.SetDefault("USE_CSRF_TOKENS", true)
-	v.SetDefault("COOKIE_NAME", "X-API-KEY")
+	v.SetDefault("AVATAR_STORAGE_PATH", "/tmp")
+	v.SetDefault("USE_SSL", true)
 
 	v.SetConfigName("passman-config")
 	v.AddConfigPath("/etc/passman/config")

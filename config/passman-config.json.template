@@ -6,5 +6,6 @@
     "SECRET_KEY": "",
     "USE_CSRF_TOKENS": true,
     "CSRF_SECRET": "",
-    "COOKIE_NAME": "X-API-KEY"
+    "AVATAR_STORAGE_PATH": "/tmp/passman/avatars",
+    "USE_SSL": true
 }
