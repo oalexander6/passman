@@ -50,7 +50,7 @@ templ NoteEditModal(note entities.Note, csrfToken string) {
 					x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
 					x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
 				>
-					<form hx-put={ "/notes/" + note.ID } hx-target={ "#list-item-" + note.ID } hx-swap="outerHTML">
+					<form hx-put={ "/api/notes/" + note.ID } hx-target={ "#list-item-" + note.ID } hx-swap="outerHTML">
 						<input type="hidden" name="_csrf" id="_csrf" value={ csrfToken }/>
 						<input type="hidden" name="id" id="id" value={ note.ID }/>
 						<div class="space-y-12">

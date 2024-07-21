@@ -5,10 +5,13 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/config"
 	"github.com/oalexander6/passman/pkg/pages"
 	"github.com/oalexander6/passman/pkg/services"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 // GinBinding represents an instance of a Gin application and the associated configuration.
@@ -48,36 +51,51 @@ func (b *GinBinding) Run() error {
 	return b.app.Run(b.config.Host)
 }
 
+func (b *GinBinding) attachMiddleware() {
+	store := cookie.NewStore([]byte(b.config.JWTSecretKey))
+	store.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Domain:   b.config.Host,
+	})
+
+	b.app.Use(sessions.Sessions(b.config.JWTCookieName, store))
+
+	if b.config.UseCSRFTokens {
+		b.app.Use(csrf.Middleware(csrf.Options{
+			IgnoreMethods: []string{"GET", "HEAD", "OPTIONS"},
+			Secret:        b.config.CSRFSecret,
+			ErrorFunc: func(c *gin.Context) {
+				c.AbortWithStatus(http.StatusBadRequest)
+			},
+		}))
+	}
+}
+
 func (b *GinBinding) attachHandlers() {
 	b.app.Static("assets", b.config.StaticFilePath)
 	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
 
+	// public routes
 	b.app.GET("/unauthorized", b.ViewUnauthorizedPage)
 	b.app.GET("/error", b.ViewErrorPage)
 	b.app.GET("/login", b.ViewLoginPage)
 
-	authHandlers, _ := b.services.Auth.Handlers()
-	auth := gin.WrapH(authHandlers)
-	b.app.Any("/auth/*action", auth)
-
-	authMiddleware := b.services.Auth.Middleware()
-	requireAuth := gin.WrapH(authMiddleware.Auth(b.app.Handler()))
-	b.app.Use(requireAuth)
-	b.app.Use(func(ctx *gin.Context) {
-		if ctx.Writer.Status() > 399 {
-			ctx.Abort()
-		}
-	})
-
+	// private routes
 	b.app.GET("/", b.ViewHomePage)
 
-	notesGroup := b.app.Group("/notes")
+	apiGroup := b.app.Group("/api")
 	{
-		notesGroup.GET("", b.GetAllNotes)
-		notesGroup.GET(":id", b.GetNoteByID)
-		notesGroup.POST("", b.CreateNote)
-		notesGroup.PUT(":id", b.UpdateNote)
-		notesGroup.DELETE(":id", b.DeleteNote)
+		notesGroup := apiGroup.Group("/notes")
+		{
+			notesGroup.GET("", b.GetAllNotes)
+			notesGroup.GET(":id", b.GetNoteByID)
+			notesGroup.POST("", b.CreateNote)
+			notesGroup.PUT(":id", b.UpdateNote)
+			notesGroup.DELETE(":id", b.DeleteNote)
+		}
 	}
 }
 

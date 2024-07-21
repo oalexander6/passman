@@ -48,7 +48,7 @@ templ NoteNewModal(csrfToken string) {
 					x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
 					x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
 				>
-					<form hx-post="/notes" hx-target="#password-list" hx-swap="outerHTML" hx-on::after-request="this.reset()">
+					<form hx-post="/api/notes" hx-target="#password-list" hx-swap="outerHTML" hx-on::after-request="this.reset()">
 						<input type="hidden" name="_csrf" id="_csrf" value={ csrfToken }/>
 						<div class="space-y-12">
 							<div class="border-b border-white/10 pb-12">

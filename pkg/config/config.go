@@ -16,7 +16,8 @@ type Config struct {
 	Debug             bool   `mapstructure:"DEBUG" json:"DEBUG"`
 	EncIV             string `mapstructure:"ENC_IV" json:"-"`
 	EncKey            string `mapstructure:"ENC_KEY" json:"-"`
-	SecretKey         string `mapstructure:"SECRET_KEY" json:"-"`
+	JWTSecretKey      string `mapstructure:"JWT_SECRET_KEY" json:"-"`
+	JWTCookieName     string `mapstructure:"JWT_COOKIE_NAME" json:"JWT_COOKIE_NAME"`
 	UseCSRFTokens     bool   `mapstructure:"USE_CSRF_TOKENS" json:"USE_CSRF_TOKENS"`
 	CSRFSecret        string `mapstructure:"CSRF_SECRET" json:"-"`
 	StaticFilePath    string `mapstructure:"STATIC_FILE_PATH" json:"STATIC_FILE_PATH"`
@@ -55,6 +56,7 @@ func new() *Config {
 	v.SetDefault("USE_CSRF_TOKENS", true)
 	v.SetDefault("AVATAR_STORAGE_PATH", "/tmp")
 	v.SetDefault("USE_SSL", true)
+	v.SetDefault("JWT_COOKIE_NAME", "JWT")
 
 	v.SetConfigName("passman-config")
 	v.AddConfigPath("/etc/passman/config")
@@ -100,8 +102,8 @@ func (c *Config) validate() error {
 		return errors.New("must provide a 32 byte ENC_KEY")
 	}
 
-	if len(c.SecretKey) < 36 {
-		return errors.New("must provide a minimum 36 byte SECRET_KEY")
+	if len(c.JWTSecretKey) < 36 {
+		return errors.New("must provide a minimum 36 byte JWT_SECRET_KEY")
 	}
 
 	if c.UseCSRFTokens && len(c.CSRFSecret) < 36 {
