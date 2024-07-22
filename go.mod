@@ -11,9 +11,13 @@ require (
 	github.com/utrack/gin-csrf v0.0.0-20190424104817-40fb8d2c8fca
 )
 
+require github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+
 require (
 	cloud.google.com/go/compute v1.25.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	github.com/alexedwards/argon2id v1.0.0 // indirect
+	github.com/appleboy/gin-jwt/v2 v2.9.2
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/a-h/templ"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -40,6 +39,7 @@ func New(services *services.Services, conf *config.Config) *GinBinding {
 
 	ginBinding.app = app
 
+	ginBinding.attachMiddleware()
 	ginBinding.attachHandlers()
 
 	return ginBinding
@@ -79,54 +79,41 @@ func (b *GinBinding) attachHandlers() {
 	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
 
 	// public routes
-	b.app.GET("/unauthorized", b.ViewUnauthorizedPage)
-	b.app.GET("/error", b.ViewErrorPage)
+	b.app.GET("/error", b.viewErrorPage)
 	b.app.GET("/login", b.ViewLoginPage)
+	b.app.GET("/register", b.ViewLoginPage)
+	b.app.POST("/api/auth/login", b.HandleLogin)
+	b.app.POST("/api/auth/register", b.HandleRegister)
+	b.app.GET("/api/auth/logout", b.HandleLogout)
+	b.app.GET("/api/auth/status", b.HandleStatus)
 
 	// private routes
-	b.app.GET("/", b.ViewHomePage)
+	b.app.Use(requireAuthMiddleware)
+	b.app.GET("/", b.viewHomePage)
 
 	apiGroup := b.app.Group("/api")
 	{
 		notesGroup := apiGroup.Group("/notes")
 		{
-			notesGroup.GET("", b.GetAllNotes)
-			notesGroup.GET(":id", b.GetNoteByID)
-			notesGroup.POST("", b.CreateNote)
-			notesGroup.PUT(":id", b.UpdateNote)
-			notesGroup.DELETE(":id", b.DeleteNote)
+			// notesGroup.GET("", b.HandleGetAllNotes)
+			notesGroup.GET(":id", b.HandleGetNoteByID)
+			notesGroup.POST("", b.HandleCreateNote)
+			notesGroup.PUT(":id", b.HandleUpdateNote)
+			notesGroup.DELETE(":id", b.HandleDeleteNote)
 		}
 	}
 }
 
-// sendJSONOrHTML sends the provided status and either the JSON data or the HTML component
-// based on the request's 'Accept' header. A value of 'application/json' will result in
-// JSON, all others will result in a HTML response.
-func sendJSONOrHTML(ctx *gin.Context, status int, data *gin.H, template templ.Component) {
-	if ctx.GetHeader("Accept") == "application/json" {
-		ctx.JSON(status, &data)
+func (b *GinBinding) viewErrorPage(c *gin.Context) {
+	sendJSONOrHTML(c, http.StatusInternalServerError, &gin.H{}, pages.Error())
+}
+
+func (b *GinBinding) viewHomePage(c *gin.Context) {
+	notes, err := b.services.GetAllNotes(c)
+	if err != nil {
+		sendJSONOrHTML(c, http.StatusInternalServerError, &gin.H{}, pages.Error())
 		return
 	}
 
-	template.Render(ctx, ctx.Writer)
-}
-
-// sendJSONOrRedirect sends the provided status and either the JSON data or a redirect
-// to the provided target based on the request's 'Accept' header. A value of
-// 'application/json' will result in JSON, all others will result in a redirect.
-func sendJSONOrRedirect(ctx *gin.Context, status int, data *gin.H, target string) {
-	if ctx.GetHeader("Accept") == "application/json" {
-		ctx.JSON(status, &data)
-		return
-	}
-
-	ctx.Redirect(http.StatusFound, target)
-}
-
-func (b *GinBinding) ViewUnauthorizedPage(ctx *gin.Context) {
-	sendJSONOrHTML(ctx, http.StatusUnauthorized, &gin.H{}, pages.NotAuthorized())
-}
-
-func (b *GinBinding) ViewErrorPage(ctx *gin.Context) {
-	sendJSONOrHTML(ctx, http.StatusInternalServerError, &gin.H{}, pages.Error())
+	sendJSONOrHTML(c, http.StatusOK, &gin.H{"notes": notes}, pages.Dashboard(notes, b.getCSRFToken(c)))
 }

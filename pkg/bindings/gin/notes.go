@@ -7,11 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/components"
 	"github.com/oalexander6/passman/pkg/entities"
-	"github.com/oalexander6/passman/pkg/pages"
 	csrf "github.com/utrack/gin-csrf"
 )
 
-func (b *GinBinding) GetAllNotes(ctx *gin.Context) {
+func (b *GinBinding) HandleGetAllNotes(ctx *gin.Context) {
 	notes, err := b.services.GetAllNotes(ctx)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
@@ -23,7 +22,7 @@ func (b *GinBinding) GetAllNotes(ctx *gin.Context) {
 	})
 }
 
-func (b *GinBinding) GetNoteByID(ctx *gin.Context) {
+func (b *GinBinding) HandleGetNoteByID(ctx *gin.Context) {
 	noteID := ctx.Param("id")
 	if noteID == "" {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -44,7 +43,7 @@ func (b *GinBinding) GetNoteByID(ctx *gin.Context) {
 	})
 }
 
-func (b *GinBinding) CreateNote(ctx *gin.Context) {
+func (b *GinBinding) HandleCreateNote(ctx *gin.Context) {
 	var noteInput entities.NoteInput
 
 	if err := ctx.ShouldBind(&noteInput); err != nil {
@@ -69,7 +68,7 @@ func (b *GinBinding) CreateNote(ctx *gin.Context) {
 	sendJSONOrHTML(ctx, http.StatusCreated, &gin.H{"note": savedNote}, components.NoteList(notes, csrfToken))
 }
 
-func (b *GinBinding) UpdateNote(ctx *gin.Context) {
+func (b *GinBinding) HandleUpdateNote(ctx *gin.Context) {
 	noteID := ctx.Param("id")
 	if noteID == "" {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -103,7 +102,7 @@ func (b *GinBinding) UpdateNote(ctx *gin.Context) {
 	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"note": updatedNote}, components.NoteListItem(updatedNote, csrfToken))
 }
 
-func (b *GinBinding) DeleteNote(ctx *gin.Context) {
+func (b *GinBinding) HandleDeleteNote(ctx *gin.Context) {
 	noteID := ctx.Param("id")
 	if noteID == "" {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -129,16 +128,4 @@ func (b *GinBinding) DeleteNote(ctx *gin.Context) {
 	csrfToken := csrf.GetToken(ctx)
 
 	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{}, components.NoteList(notes, csrfToken))
-}
-
-func (b *GinBinding) ViewHomePage(ctx *gin.Context) {
-	notes, err := b.services.GetAllNotes(ctx)
-	if err != nil {
-		sendJSONOrHTML(ctx, http.StatusInternalServerError, &gin.H{}, pages.Error())
-		return
-	}
-
-	csrfToken := csrf.GetToken(ctx)
-
-	sendJSONOrHTML(ctx, http.StatusOK, &gin.H{"message": "OK"}, pages.Dashboard(notes, csrfToken))
 }
