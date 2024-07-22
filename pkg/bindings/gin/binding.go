@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/config"
 	"github.com/oalexander6/passman/pkg/pages"
 	"github.com/oalexander6/passman/pkg/services"
-	csrf "github.com/utrack/gin-csrf"
 )
 
 // GinBinding represents an instance of a Gin application and the associated configuration.
@@ -39,7 +36,6 @@ func New(services *services.Services, conf *config.Config) *GinBinding {
 
 	ginBinding.app = app
 
-	ginBinding.attachMiddleware()
 	ginBinding.attachHandlers()
 
 	return ginBinding
@@ -51,45 +47,25 @@ func (b *GinBinding) Run() error {
 	return b.app.Run(b.config.Host)
 }
 
-func (b *GinBinding) attachMiddleware() {
-	store := cookie.NewStore([]byte(b.config.JWTSecretKey))
-	store.Options(sessions.Options{
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-		Domain:   b.config.Host,
-	})
-
-	b.app.Use(sessions.Sessions(b.config.JWTCookieName, store))
-
-	if b.config.UseCSRFTokens {
-		b.app.Use(csrf.Middleware(csrf.Options{
-			IgnoreMethods: []string{"GET", "HEAD", "OPTIONS"},
-			Secret:        b.config.CSRFSecret,
-			ErrorFunc: func(c *gin.Context) {
-				c.AbortWithStatus(http.StatusBadRequest)
-			},
-		}))
-	}
-}
-
 func (b *GinBinding) attachHandlers() {
 	b.app.Static("assets", b.config.StaticFilePath)
 	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
 
+	jwtProvider := b.getJWTProvider()
+
 	// public routes
 	b.app.GET("/error", b.viewErrorPage)
-	b.app.GET("/login", b.ViewLoginPage)
-	b.app.GET("/register", b.ViewLoginPage)
-	b.app.POST("/api/auth/login", b.HandleLogin)
-	b.app.POST("/api/auth/register", b.HandleRegister)
-	b.app.GET("/api/auth/logout", b.HandleLogout)
-	b.app.GET("/api/auth/status", b.HandleStatus)
+	b.app.GET("/login", b.viewLoginPage)
+	b.app.GET("/register", b.viewLoginPage)
+	b.app.POST("/api/auth/login", jwtProvider.LoginHandler)
+	b.app.POST("/api/auth/refresh", jwtProvider.RefreshHandler)
+	b.app.POST("/api/auth/register", b.handleRegister)
 
 	// private routes
-	b.app.Use(requireAuthMiddleware)
+	b.app.Use(jwtProvider.MiddlewareFunc())
 	b.app.GET("/", b.viewHomePage)
+	b.app.GET("/api/auth/logout", jwtProvider.LogoutHandler)
+	b.app.GET("/api/auth/status", b.handleStatus)
 
 	apiGroup := b.app.Group("/api")
 	{
