@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/pkg/config"
 	"github.com/oalexander6/passman/pkg/pages"
 	"github.com/oalexander6/passman/pkg/services"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 // GinBinding represents an instance of a Gin application and the associated configuration.
@@ -51,6 +54,15 @@ func (b *GinBinding) attachHandlers() {
 	b.app.Static("assets", b.config.StaticFilePath)
 	b.app.StaticFile("favicon.ico", fmt.Sprintf("%s/favicon.png", b.config.StaticFilePath))
 
+	b.app.Use(sessions.Sessions("mysession", cookie.NewStore([]byte(b.config.JWTSecretKey))))
+	b.app.Use(csrf.Middleware(csrf.Options{
+		Secret: "secret123",
+		ErrorFunc: func(c *gin.Context) {
+			c.String(400, "CSRF token mismatch")
+			c.Abort()
+		},
+	}))
+
 	jwtProvider := b.getJWTProvider()
 
 	// public routes
@@ -62,7 +74,7 @@ func (b *GinBinding) attachHandlers() {
 	b.app.POST("/api/auth/register", b.handleRegister)
 
 	// private routes
-	b.app.Use(jwtProvider.MiddlewareFunc())
+	// b.app.Use(jwtProvider.MiddlewareFunc())
 	b.app.GET("/", b.viewHomePage)
 	b.app.GET("/api/auth/logout", jwtProvider.LogoutHandler)
 	b.app.GET("/api/auth/status", b.handleStatus)
