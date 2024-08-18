@@ -63,20 +63,20 @@ func (b *GinBinding) attachHandlers() {
 		},
 	}))
 
-	jwtProvider := b.getJWTProvider()
+	// jwtProvider := b.getJWTProvider()
 
 	// public routes
 	b.app.GET("/error", b.viewErrorPage)
 	b.app.GET("/login", b.viewLoginPage)
 	b.app.GET("/register", b.viewLoginPage)
-	b.app.POST("/api/auth/login", jwtProvider.LoginHandler)
-	b.app.POST("/api/auth/refresh", jwtProvider.RefreshHandler)
-	b.app.POST("/api/auth/register", b.handleRegister)
+	// b.app.POST("/api/auth/login", jwtProvider.LoginHandler)
+	// b.app.POST("/api/auth/refresh", jwtProvider.RefreshHandler)
+	// b.app.POST("/api/auth/register", b.handleRegister)
 
 	// private routes
 	// b.app.Use(jwtProvider.MiddlewareFunc())
 	b.app.GET("/", b.viewHomePage)
-	b.app.GET("/api/auth/logout", jwtProvider.LogoutHandler)
+	// b.app.GET("/api/auth/logout", jwtProvider.LogoutHandler)
 	b.app.GET("/api/auth/status", b.handleStatus)
 
 	apiGroup := b.app.Group("/api")
