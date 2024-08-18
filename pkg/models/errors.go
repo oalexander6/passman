@@ -1,8 +1,6 @@
-package entities
+package models
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	ErrNotFound      = errors.New("entity not found")

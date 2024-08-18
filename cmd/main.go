@@ -1,19 +1,23 @@
 package main
 
 import (
-	"log"
+	"os"
 
-	gin_binding "github.com/oalexander6/passman/pkg/bindings/gin"
-	"github.com/oalexander6/passman/pkg/config"
-	"github.com/oalexander6/passman/pkg/services"
-	memory_store "github.com/oalexander6/passman/pkg/stores/memory"
+	"github.com/oalexander6/passman/config"
+	"github.com/oalexander6/passman/pkg/logger"
+	"github.com/oalexander6/passman/pkg/server"
+	"github.com/oalexander6/passman/pkg/store"
+	"github.com/rs/zerolog"
 )
 
 func main() {
-	conf := config.GetConfig()
-	memoryStore := memory_store.New()
-	services := services.New(conf, memoryStore.NotesStore, memoryStore.AccountsStore)
-	app := gin_binding.New(services, conf)
+	logger.Init(zerolog.DebugLevel, os.Stdout)
 
-	log.Fatal(app.Run())
+	c := config.New()
+	if err := c.Validate(); err != nil {
+		logger.Log.Fatal().Msgf("Invalid configuration: %s", err.Error())
+	}
+
+	app := server.New(c, store.Store{})
+	logger.Log.Fatal().Msgf("Application crashed: %s", app.Run().Error())
 }
