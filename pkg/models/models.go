@@ -5,6 +5,7 @@ import "github.com/oalexander6/passman/config"
 type Store interface {
 	accountStore
 	noteStore
+	Close()
 }
 
 type Models struct {

@@ -1,15 +1,13 @@
 package models
 
-import "time"
-
-type base struct {
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
-	Deleted   bool      `db:"deleted"`
+type Base struct {
+	CreatedAt string `db:"created_at"`
+	UpdatedAt string `db:"updated_at"`
+	Deleted   bool   `db:"deleted"`
 }
 
 type IDResponse struct {
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type SuccessResponse struct {

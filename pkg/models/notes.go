@@ -14,10 +14,10 @@ import (
 // Note represents a note/password, which may be secure or not secure. Secure notes will
 // have their value encrypted upon storage.
 type Note struct {
-	ID    int    `db:"id"`
+	ID    int64  `db:"id"`
 	Name  string `db:"name"`
 	Value string `db:"value"`
-	base
+	Base
 }
 
 // NoteCreateRequest represents the data required to create a new note.
@@ -34,16 +34,16 @@ type NoteGetResponse struct {
 // NoteStore defines the interface required to implement persistent storage functionality
 // for notes.
 type noteStore interface {
-	NoteGetByID(ctx context.Context, id int) (Note, error)
-	NoteGetByAccountID(ctx context.Context, userID int) ([]Note, error)
+	NoteGetByID(ctx context.Context, id int64) (Note, error)
+	NoteGetByAccountID(ctx context.Context, userID int64) ([]Note, error)
 	NoteCreate(ctx context.Context, noteInput Note) (Note, error)
 	NoteUpdate(ctx context.Context, note Note) (Note, error)
-	NoteDeleteByID(ctx context.Context, id int) error
+	NoteDeleteByID(ctx context.Context, id int64) error
 }
 
-// GetNoteByID returns the note with the provided ID with the value of secure notes decrypted.
+// NoteGetByID returns the note with the provided ID with the value of secure notes decrypted.
 // Returns an error if the note is not found.
-func (m *Models) GetNoteByID(ctx context.Context, noteID int) (NoteGetResponse, error) {
+func (m *Models) NoteGetByID(ctx context.Context, noteID int64) (NoteGetResponse, error) {
 	note, err := m.store.NoteGetByID(ctx, noteID)
 	if err != nil {
 		return NoteGetResponse{}, err
@@ -62,9 +62,9 @@ func (m *Models) GetNoteByID(ctx context.Context, noteID int) (NoteGetResponse, 
 	}, nil
 }
 
-// NoteGetByUserID returns all stored notes with the value of secure notes decrypted.
+// NoteGetByAccountID returns all stored notes with the value of secure notes decrypted.
 // Does NOT return an error if no notes are found.
-func (m *Models) NoteGetByUserID(ctx context.Context, accountID int) ([]NoteGetResponse, error) {
+func (m *Models) NoteGetByAccountID(ctx context.Context, accountID int64) ([]NoteGetResponse, error) {
 	notes, err := m.store.NoteGetByAccountID(ctx, accountID)
 	if err != nil {
 		return []NoteGetResponse{}, err
@@ -134,7 +134,7 @@ func (m *Models) NoteUpdate(ctx context.Context, note Note) (Note, error) {
 
 // DeleteNoteByID will remove the note with the provided ID.
 // Returns an error if a note with that ID is not found.
-func (m *Models) NoteDeleteByID(ctx context.Context, noteID int) error {
+func (m *Models) NoteDeleteByID(ctx context.Context, noteID int64) error {
 	return m.store.NoteDeleteByID(ctx, noteID)
 }
 

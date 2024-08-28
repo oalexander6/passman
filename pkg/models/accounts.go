@@ -7,14 +7,18 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
+
 // Account represents a user account of any type. An account may be stored with an
 // empty string for a password, indicating that they must log in with OAuth.
 type Account struct {
-	ID       int    `db:"id"`
+	ID       int64  `db:"id"`
 	Email    string `db:"email"`
 	Password string `db:"password"`
 	Name     string `db:"name"`
-	base
+	Base
 }
 
 // Represents the required input to the register method.
@@ -32,7 +36,7 @@ type AccountLoginRequest struct {
 
 // Represents the type of the response from the get all and get one methods.
 type AccountGetResponse struct {
-	ID    int    `db:"id"`
+	ID    int64  `db:"id"`
 	Email string `db:"email"`
 	Name  string `db:"name"`
 }
@@ -40,9 +44,9 @@ type AccountGetResponse struct {
 // Defines the required interface to implement an account store.
 type accountStore interface {
 	AccountCreate(ctx context.Context, account Account) (Account, error)
-	AccountGetByID(ctx context.Context, id int) (Account, error)
+	AccountGetByID(ctx context.Context, id int64) (Account, error)
 	AccountGetByEmail(ctx context.Context, email string) (Account, error)
-	AccountDelete(ctx context.Context, id int) error
+	AccountDelete(ctx context.Context, id int64) error
 }
 
 // Checks for existing account, creates a new account and saves it with the password hashed.
@@ -79,15 +83,32 @@ func (m *Models) AccountRegister(ctx context.Context, account AccountCreateReque
 // Checks the provided credentials against the existing account and it's password hash. Returns an error
 // if the credentials are invalid.
 func (m *Models) AccountLogin(ctx context.Context, credentials AccountLoginRequest) (IDResponse, error) {
-	return IDResponse{}, nil
+	account, err := m.store.AccountGetByEmail(ctx, credentials.Email)
+	if err != nil {
+		return IDResponse{}, err
+	}
+
+	match, err := argon2id.ComparePasswordAndHash(credentials.Password, account.Password)
+	if err != nil {
+		return IDResponse{}, err
+	}
+	if !match {
+		return IDResponse{}, ErrInvalidCredentials
+	}
+
+	return IDResponse{ID: account.ID}, nil
 }
 
 // Retrieves the account with the provided ID. Returns an error if the ID is not found.
-func (m *Models) AccountGetByID(ctx context.Context, id int) (AccountGetResponse, error) {
-	return AccountGetResponse{}, nil
-}
+func (m *Models) AccountGetByID(ctx context.Context, id int64) (AccountGetResponse, error) {
+	account, err := m.store.AccountGetByID(ctx, id)
+	if err != nil {
+		return AccountGetResponse{}, err
+	}
 
-// Retrieves all accounts. Returns an error if none are found.
-func (m *Models) AccountGetAll(ctx context.Context) ([]AccountGetResponse, error) {
-	return []AccountGetResponse{}, nil
+	return AccountGetResponse{
+		ID:    account.ID,
+		Email: account.Email,
+		Name:  account.Name,
+	}, nil
 }

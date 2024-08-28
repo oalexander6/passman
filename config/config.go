@@ -12,28 +12,31 @@ import (
 )
 
 const (
-	LOCAL_ENV = "LOCAL"
-	DEV_ENV   = "DEV"
-	STAGE_ENV = "STAGE"
-	PROD_ENV  = "PROD"
+	LOCAL_ENV           = "LOCAL"
+	DEV_ENV             = "DEV"
+	STAGE_ENV           = "STAGE"
+	PROD_ENV            = "PROD"
+	STORE_TYPE_POSTGRES = "postgres"
+	STORE_TYPE_SQLITE   = "sqlite"
 )
 
 type PostgresConfig struct {
-	// Postgres host
-	Host string `json:"HOST" validate:"required"`
-	// Postgres database name
-	DBName string `json:"DB_NAME" validate:"required"`
-	// Postgres username
-	User string `json:"USER" validate:"required"`
-	// Postgres password
-	Password string `json:"-" validate:"required"`
+	// Postgres connection URI
+	URI string `json:"DB_URI" validate:"required"`
+}
+
+type SqliteConfig struct {
+	// the file path to the database
+	DBFile string `json:"DB_FILE" validate:"required"`
+	// whether to delete all existing data on startup
+	DeleteOnStartup bool `json:"DELETE_ON_STARTUP" validate:"required"`
 }
 
 type EncryptionConfig struct {
 	// Initialization vector for AES encryption
-	EncIV string `json:"ENCRYPTION_IV" validate:"required"`
+	EncIV string `json:"ENCRYPTION_IV" validate:"required,len=16"`
 	// AES encryption secret key
-	EncSecret string `json:"ENCRYPTION_SECERET" validate:"required"`
+	EncSecret string `json:"ENCRYPTION_SECERET" validate:"required,len=32"`
 }
 
 type Config struct {
@@ -49,8 +52,12 @@ type Config struct {
 	CSRFKey string `json:"-" validate:"required_if=EnableCSRFProtection true,len=36"`
 	// use CSRF protections
 	EnableCSRFProtection bool `json:"ENABLE_CSRF_PROTECTION" validate:"boolean"`
+	// store type to use - postgres, sqlite
+	StoreType string `json:"STORE_TYPE" validate:"required,oneof=postgres sqlite"`
 	// Postgres configuration
-	PostgresOpts PostgresConfig `json:"POSTGRES" validate:"required"`
+	PostgresOpts PostgresConfig `json:"POSTGRES" validate:"required_if=StoreType postgres"`
+	// Sqlite configuration
+	SqliteOpts SqliteConfig `json:"SQLITE" validate:"required_if=StoreType sqlite"`
 	// Note encryption config
 	Encryption EncryptionConfig `json:"ENCRYPTION" validate:"required"`
 }
@@ -73,10 +80,11 @@ func New() *Config {
 		SecretKey: secretVals["SECRET_KEY"],
 		CSRFKey:   secretVals["CSRF_KEY"],
 		PostgresOpts: PostgresConfig{
-			Host:     os.Getenv("POSTGRES_HOST"),
-			DBName:   os.Getenv("POSTGRES_DB_NAME"),
-			User:     secretVals["POSTGRES_USER"],
-			Password: secretVals["POSTGRES_PASSWORD"],
+			URI: os.Getenv("POSTGRES_URI"),
+		},
+		Encryption: EncryptionConfig{
+			EncIV:     secretVals["ENCRYPTION_IV"],
+			EncSecret: secretVals["ENCRYPTION_SECRET"],
 		},
 	}
 
