@@ -25,13 +25,6 @@ type PostgresConfig struct {
 	URI string `json:"DB_URI" validate:"required"`
 }
 
-type SqliteConfig struct {
-	// the file path to the database
-	DBFile string `json:"DB_FILE" validate:"required"`
-	// whether to delete all existing data on startup
-	DeleteOnStartup bool `json:"DELETE_ON_STARTUP" validate:"required"`
-}
-
 type EncryptionConfig struct {
 	// Initialization vector for AES encryption
 	EncIV string `json:"ENCRYPTION_IV" validate:"required,len=16"`
@@ -56,8 +49,6 @@ type Config struct {
 	StoreType string `json:"STORE_TYPE" validate:"required,oneof=postgres sqlite"`
 	// Postgres configuration
 	PostgresOpts PostgresConfig `json:"POSTGRES" validate:"required_if=StoreType postgres"`
-	// Sqlite configuration
-	SqliteOpts SqliteConfig `json:"SQLITE" validate:"required_if=StoreType sqlite"`
 	// Note encryption config
 	Encryption EncryptionConfig `json:"ENCRYPTION" validate:"required"`
 }
@@ -79,8 +70,9 @@ func New() *Config {
 		Version:   os.Getenv("VERSION"),
 		SecretKey: secretVals["SECRET_KEY"],
 		CSRFKey:   secretVals["CSRF_KEY"],
+		StoreType: os.Getenv("STORE_TYPE"),
 		PostgresOpts: PostgresConfig{
-			URI: os.Getenv("POSTGRES_URI"),
+			URI: os.Getenv("DB_URI"),
 		},
 		Encryption: EncryptionConfig{
 			EncIV:     secretVals["ENCRYPTION_IV"],

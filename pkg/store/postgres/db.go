@@ -23,6 +23,14 @@ func New(opts config.PostgresConfig) *PostgresStore {
 		logger.Log.Fatal().Msgf("Unable to create pgx connection pool: %s", err)
 	}
 
+	var greeting string
+	err = conn.QueryRow(context.Background(), "SELECT 'Hello, world!'").Scan(&greeting)
+	if err != nil {
+		logger.Log.Fatal().Msgf("Failed to get greeting: %s", err)
+	}
+
+	logger.Log.Debug().Msgf("Got greeting: %s", greeting)
+
 	return &PostgresStore{
 		dbpool: conn,
 	}

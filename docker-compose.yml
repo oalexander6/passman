@@ -1,8 +1,8 @@
 version: "3.9"
 
 services:
-  rightshift:
-    container_name: rightshift
+  passman: 
+    container_name: passman
     build: .
     env_file:
       - .env
@@ -32,7 +32,7 @@ services:
       - backend
       - postgres
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - passman_pgdata:/var/lib/postgresql/data
     profiles:
       - postgres
       - all
@@ -50,7 +50,7 @@ services:
     networks:
       - postgres
     volumes:
-      - pgadmindata:/var/lib/pgadmin
+      - passman_pgadmindata:/var/lib/pgadmin
     depends_on:
       - postgres
     profiles:
@@ -58,8 +58,8 @@ services:
       - all
 
 volumes:
-  pgdata: {}
-  pgadmindata: {}
+  passman_pgdata: {}
+  passman_pgadmindata: {}
 
 networks:
   backend:
