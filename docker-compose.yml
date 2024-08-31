@@ -18,7 +18,7 @@ services:
       - all
 
   postgres:
-    container_name: postgres
+    container_name: passman_postgres
     image: postgres:16-alpine
     env_file:
       - .env
@@ -38,7 +38,7 @@ services:
       - all
   
   pgadmin:
-    container_name: pgadmin
+    container_name: passman_pgadmin
     image: dpage/pgadmin4:8.10
     env_file:
       - .env

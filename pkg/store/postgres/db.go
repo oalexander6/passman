@@ -15,12 +15,11 @@ type PostgresStore struct {
 	dbpool *pgxpool.Pool
 }
 
-var accountsSchema = `
-CREATE TABLE IF NOT EXISTS accounts (
+var schema = `
+CREATE TABLE IF NOT EXISTS notes (
 	id         BIGSERIAL PRIMARY KEY,
-	email      TEXT NOT NULL,
-	password   TEXT NOT NULL,
 	name       TEXT NOT NULL,
+	value      TEXT NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL,
 	deleted    BOOLEAN NOT NULL
@@ -36,15 +35,11 @@ func New(opts config.PostgresConfig) *PostgresStore {
 		logger.Log.Fatal().Msgf("Unable to create pgx connection pool: %s", err)
 	}
 
-	var greeting string
-	err = conn.QueryRow(context.Background(), "SELECT 'Hello, world!'").Scan(&greeting)
-	if err != nil {
-		logger.Log.Fatal().Msgf("Failed to get greeting: %s", err)
+	if err = conn.Ping(ctx); err != nil {
+		logger.Log.Fatal().Msgf("Failed to ping postgres: %s", err)
 	}
 
-	logger.Log.Debug().Msgf("Got greeting: %s", greeting)
-
-	conn.Exec(context.Background(), accountsSchema)
+	conn.Exec(context.Background(), schema)
 
 	return &PostgresStore{
 		dbpool: conn,
@@ -55,30 +50,24 @@ func (s PostgresStore) Close() {
 	s.dbpool.Close()
 }
 
-// AccountDelete implements models.Store.
-func (s PostgresStore) AccountDelete(ctx context.Context, id int64) error {
-	query := `UPDATE accounts SET deleted=true WHERE id=$1;`
-
-	result, err := s.dbpool.Exec(ctx, query, id)
-	if err != nil {
-		return err
-	}
-
-	if result.RowsAffected() != 1 {
-		return models.ErrNotFound
-	}
-
-	return nil
-}
-
-// AccountGetByEmail implements models.Store.
-func (s PostgresStore) AccountGetByEmail(ctx context.Context, email string) (models.Account, error) {
-	panic("unimplemented")
-}
-
 // NoteCreate implements models.Store.
-func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.Note) (models.Note, error) {
-	panic("unimplemented")
+func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.NoteCreateParams) (models.Note, error) {
+	query := `INSERT INTO notes (name, value, created_at, updated_at, deleted) VALUES ($1, $2, $3, $4, $5) RETURNING id;`
+
+	currTime := time.Now().UTC().Format(time.RFC3339)
+
+	var insertedID int64
+	if err := s.dbpool.QueryRow(ctx, query, noteInput.Name, noteInput.Value, currTime, currTime, true).Scan(&insertedID); err != nil {
+		return models.Note{}, err
+	}
+
+	return models.Note{
+		ID:        insertedID,
+		Name:      noteInput.Name,
+		Value:     noteInput.Value,
+		CreatedAt: currTime,
+		UpdatedAt: currTime,
+	}, nil
 }
 
 // NoteDeleteByID implements models.Store.
@@ -97,11 +86,6 @@ func (s PostgresStore) NoteDeleteByID(ctx context.Context, id int64) error {
 	return nil
 }
 
-// NoteGetByAccountID implements models.Store.
-func (s PostgresStore) NoteGetByAccountID(ctx context.Context, userID int64) ([]models.Note, error) {
-	panic("unimplemented")
-}
-
 // NoteGetByID implements models.Store.
 func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, error) {
 	query := `SELECT * FROM notes WHERE id=$1 AND deleted=false;`
@@ -111,52 +95,28 @@ func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, 
 		return models.Note{}, err
 	}
 
-	pgx.RowTo[models.Account](row)
-	account, err := pgx.CollectOneRow(row, pgx.RowToStructByName[models.Account])
+	pgx.RowTo[models.Note](row)
+	note, err := pgx.CollectOneRow(row, pgx.RowToStructByName[models.Note])
 	if err != nil {
-		return models.Account{}, models.ErrNotFound
+		return models.Note{}, models.ErrNotFound
 	}
 
-	return account, nil
+	return note, nil
 }
 
-// NoteUpdate implements models.Store.
-func (s PostgresStore) NoteUpdate(ctx context.Context, note models.Note) (models.Note, error) {
-	panic("unimplemented")
-}
+// NoteGetAll implements models.Store.
+func (s PostgresStore) NoteGetAll(ctx context.Context, id int64) ([]models.Note, error) {
+	query := `SELECT * FROM notes WHERE deleted=false;`
 
-// AccountCreate implements models.Store.
-func (s PostgresStore) AccountCreate(ctx context.Context, account models.Account) (models.Account, error) {
-	query := `INSERT INTO accounts (email, password, name, created_at, updated_at, delete) VALUES (@email, @password, @name, @created_at, @updated_at, @delete);`
-
-	args := pgx.NamedArgs{
-		"email":      account.Email,
-		"password":   account.Password,
-		"name":       account.Name,
-		"created_at": time.Now().UTC().Format(time.RFC3339),
-		"updated_at": time.Now().UTC().Format(time.RFC3339),
-		"deleted":    false,
-	}
-
-	s.dbpool.Exec(ctx, query, args)
-
-	return models.Account{}, nil
-}
-
-// AccountGetByID implements models.Store.
-func (s PostgresStore) AccountGetByID(ctx context.Context, id int64) (models.Account, error) {
-	query := `SELECT * FROM accounts WHERE id=$1 AND deleted=false;`
-
-	row, err := s.dbpool.Query(ctx, query, id)
+	rows, err := s.dbpool.Query(ctx, query, id)
 	if err != nil {
-		return models.Account{}, err
+		return []models.Note{}, err
 	}
 
-	pgx.RowTo[models.Account](row)
-	account, err := pgx.CollectOneRow(row, pgx.RowToStructByName[models.Account])
+	notes, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Note])
 	if err != nil {
-		return models.Account{}, models.ErrNotFound
+		return []models.Note{}, models.ErrNotFound
 	}
 
-	return account, nil
+	return notes, nil
 }

@@ -14,15 +14,12 @@ require (
 )
 
 require (
-	github.com/alexedwards/argon2id v1.0.0
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.19.0 // indirect

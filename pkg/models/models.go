@@ -3,7 +3,6 @@ package models
 import "github.com/oalexander6/passman/config"
 
 type Store interface {
-	accountStore
 	noteStore
 	Close()
 }

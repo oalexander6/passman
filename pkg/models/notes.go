@@ -11,33 +11,41 @@ import (
 	"math/big"
 )
 
-// Note represents a note/password, which may be secure or not secure. Secure notes will
-// have their value encrypted upon storage.
+// Note represents a note/password. The value field will always be stored encrypted.
 type Note struct {
-	ID    int64  `db:"id"`
-	Name  string `db:"name"`
-	Value string `db:"value"`
-	Base
+	ID        int64  `db:"id"`
+	Name      string `db:"name"`
+	Value     string `db:"value"`
+	CreatedAt string `db:"created_at"`
+	UpdatedAt string `db:"updated_at"`
 }
 
-// NoteCreateRequest represents the data required to create a new note.
-type NoteCreateRequest struct {
+// NoteCreateParams represents the data required to create a new note.
+type NoteCreateParams struct {
 	Name  string `json:"name" form:"name" validate:"required"`
 	Value string `json:"value" form:"value" validate:"required"`
 }
 
+// NoteCreateRandomParams represents the data required to create a new random note.
+type NoteCreateRandomParams struct {
+	Name   string `json:"name" form:"name" validate:"required"`
+	Length int    `json:"length" form:"length" validate:"required,lte=2048"`
+}
+
+// NoteGetResponse represents the data returned for note GET requests.
 type NoteGetResponse struct {
-	Name  string `json:"name" form:"name"`
-	Value string `json:"value" form:"value"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Value     string `json:"value"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 // NoteStore defines the interface required to implement persistent storage functionality
 // for notes.
 type noteStore interface {
 	NoteGetByID(ctx context.Context, id int64) (Note, error)
-	NoteGetByAccountID(ctx context.Context, userID int64) ([]Note, error)
-	NoteCreate(ctx context.Context, noteInput Note) (Note, error)
-	NoteUpdate(ctx context.Context, note Note) (Note, error)
+	NoteCreate(ctx context.Context, noteInput NoteCreateParams) (Note, error)
 	NoteDeleteByID(ctx context.Context, id int64) error
 }
 
@@ -62,74 +70,50 @@ func (m *Models) NoteGetByID(ctx context.Context, noteID int64) (NoteGetResponse
 	}, nil
 }
 
-// NoteGetByAccountID returns all stored notes with the value of secure notes decrypted.
-// Does NOT return an error if no notes are found.
-func (m *Models) NoteGetByAccountID(ctx context.Context, accountID int64) ([]NoteGetResponse, error) {
-	notes, err := m.store.NoteGetByAccountID(ctx, accountID)
-	if err != nil {
-		return []NoteGetResponse{}, err
-	}
-
-	unencryptedNotes := make([]NoteGetResponse, len(notes))
-
-	for i := range notes {
-		unencryptedNotes[i] = NoteGetResponse{
-			Name: notes[i].Name,
-		}
-
-		decryptedVal, err := m.Decyrpt([]byte(notes[i].Value))
-		if err != nil {
-			return []NoteGetResponse{}, ErrDecryptFailed
-		}
-
-		unencryptedNotes[i].Value = decryptedVal
-	}
-
-	return unencryptedNotes, nil
-}
-
 // NoteCreate saves a new note. It will encrypt the value of the note if it is marked as secure.
 // Returns an error if the note fails to save.
-func (m *Models) NoteCreate(ctx context.Context, noteInput Note) (Note, error) {
-	unencryptedVal := noteInput.Value
-
+func (m *Models) NoteCreate(ctx context.Context, noteInput NoteCreateParams) (NoteGetResponse, error) {
 	encVal, err := m.Encrypt([]byte(noteInput.Value))
 	if err != nil {
-		return Note{}, err
+		return NoteGetResponse{}, err
 	}
 
 	noteInput.Value = encVal
 
 	savedNote, err := m.store.NoteCreate(ctx, noteInput)
 	if err != nil {
-		return Note{}, err
+		return NoteGetResponse{}, err
 	}
 
-	savedNote.Value = unencryptedVal
+	decryptedVal, err := m.Decyrpt([]byte(savedNote.Value))
+	if err != nil {
+		return NoteGetResponse{}, ErrDecryptFailed
+	}
 
-	return savedNote, nil
+	return NoteGetResponse{
+		ID:        savedNote.ID,
+		Name:      savedNote.Name,
+		Value:     decryptedVal,
+		CreatedAt: savedNote.CreatedAt,
+		UpdatedAt: savedNote.UpdatedAt,
+	}, nil
 }
 
-// NoteUpdate updates the note that matches the provided note's ID. It will encrypt the provided
-// value if the note is marked as secure.
-// Returns an error if no note with the provided ID is found.
-func (m *Models) NoteUpdate(ctx context.Context, note Note) (Note, error) {
-	unencryptedVal := note.Value
-
-	encVal, err := m.Encrypt([]byte(note.Value))
+// NoteCreateRandom saves a new note with a randomly generated value.
+// Returns an error if the note fails to save or the random value generation fails.
+func (m *Models) NoteCreateRandom(ctx context.Context, noteInput NoteCreateRandomParams) (NoteGetResponse, error) {
+	validCharacters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.#$"
+	randomVal, err := generateRandomString(noteInput.Length, validCharacters)
 	if err != nil {
-		return Note{}, err
+		return NoteGetResponse{}, err
 	}
 
-	note.Value = encVal
-	savedNote, err := m.store.NoteUpdate(ctx, note)
-	if err != nil {
-		return Note{}, err
+	noteCreateParams := NoteCreateParams{
+		Name:  noteInput.Name,
+		Value: randomVal,
 	}
 
-	savedNote.Value = unencryptedVal
-
-	return savedNote, nil
+	return m.NoteCreate(ctx, noteCreateParams)
 }
 
 // DeleteNoteByID will remove the note with the provided ID.
