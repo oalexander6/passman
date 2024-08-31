@@ -24,17 +24,30 @@ func New(conf *config.Config, store models.Store) *Server {
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 
-	r.GET("/", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "Hello")
-	})
-
-	return &Server{
+	s := &Server{
 		config: conf,
 		models: models.New(store, conf),
 		server: r,
 	}
+
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Hello")
+	})
+	r.GET("/notes", s.handleGetAllNotes)
+
+	return s
 }
 
 func (s *Server) Run() error {
 	return s.server.Run(":" + s.config.Port)
+}
+
+func (s *Server) handleGetAllNotes(ctx *gin.Context) {
+	notes, err := s.models.NoteGetAll(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"notes": notes})
 }

@@ -45,11 +45,12 @@ type NoteGetResponse struct {
 // for notes.
 type noteStore interface {
 	NoteGetByID(ctx context.Context, id int64) (Note, error)
+	NoteGetAll(ctx context.Context) ([]Note, error)
 	NoteCreate(ctx context.Context, noteInput NoteCreateParams) (Note, error)
 	NoteDeleteByID(ctx context.Context, id int64) error
 }
 
-// NoteGetByID returns the note with the provided ID with the value of secure notes decrypted.
+// NoteGetByID returns the note with the provided ID with the value decrypted.
 // Returns an error if the note is not found.
 func (m *Models) NoteGetByID(ctx context.Context, noteID int64) (NoteGetResponse, error) {
 	note, err := m.store.NoteGetByID(ctx, noteID)
@@ -68,6 +69,33 @@ func (m *Models) NoteGetByID(ctx context.Context, noteID int64) (NoteGetResponse
 		Name:  note.Name,
 		Value: note.Value,
 	}, nil
+}
+
+// NoteGetAll returns all notes with their value's decrypted.
+// Returns an error if the note is not found.
+func (m *Models) NoteGetAll(ctx context.Context) ([]NoteGetResponse, error) {
+	notes, err := m.store.NoteGetAll(ctx)
+	if err != nil {
+		return []NoteGetResponse{}, err
+	}
+
+	results := make([]NoteGetResponse, len(notes))
+	for i := range notes {
+		decryptedVal, err := m.Decyrpt([]byte(notes[i].Value))
+		if err != nil {
+			return []NoteGetResponse{}, ErrDecryptFailed
+		}
+
+		results[i] = NoteGetResponse{
+			ID:        notes[i].ID,
+			Name:      notes[i].Name,
+			Value:     decryptedVal,
+			CreatedAt: notes[i].CreatedAt,
+			UpdatedAt: notes[i].UpdatedAt,
+		}
+	}
+
+	return results, nil
 }
 
 // NoteCreate saves a new note. It will encrypt the value of the note if it is marked as secure.

@@ -105,10 +105,10 @@ func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, 
 }
 
 // NoteGetAll implements models.Store.
-func (s PostgresStore) NoteGetAll(ctx context.Context, id int64) ([]models.Note, error) {
+func (s PostgresStore) NoteGetAll(ctx context.Context) ([]models.Note, error) {
 	query := `SELECT * FROM notes WHERE deleted=false;`
 
-	rows, err := s.dbpool.Query(ctx, query, id)
+	rows, err := s.dbpool.Query(ctx, query)
 	if err != nil {
 		return []models.Note{}, err
 	}
