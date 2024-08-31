@@ -3,42 +3,38 @@ package httpserver
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/config"
-	"github.com/oalexander6/passman/pkg/logger"
 	"github.com/oalexander6/passman/pkg/models"
-	"github.com/urfave/negroni"
 )
 
 type Server struct {
 	config *config.Config
 	models *models.Models
-	server http.Handler
+	server *gin.Engine
 }
 
+// Initializes a new instance of a Gin HTTP server. If the environment set in the provided
+// config is PROD, Gin will run in release mode, otherwise debug mode.
 func New(conf *config.Config, store models.Store) *Server {
-	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}))
+	if conf.Env == config.PROD_ENV {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
-	mw := negroni.New()
-	mw.Use(negroni.NewRecovery())
-	mw.Use(negroni.HandlerFunc(logMiddleware))
-	mw.UseHandler(mux)
+	r := gin.Default()
+	r.SetTrustedProxies(nil)
+
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Hello")
+	})
 
 	return &Server{
 		config: conf,
 		models: models.New(store, conf),
-		server: mw,
+		server: r,
 	}
 }
 
 func (s *Server) Run() error {
-	logger.Log.Info().Msgf("listening on %s\n", s.config.Port)
-	if err := http.ListenAndServe(":"+s.config.Port, s.server); err != nil && err != http.ErrServerClosed {
-		logger.Log.Info().Msgf("error listening and serving: %s\n", err)
-	}
-
-	return nil
+	return s.server.Run(":" + s.config.Port)
 }
