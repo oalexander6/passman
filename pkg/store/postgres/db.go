@@ -10,7 +10,7 @@ import (
 )
 
 type PostgresStore struct {
-	dbpool *pgxpool.Pool
+	db *pgxpool.Pool
 }
 
 var schema = `
@@ -40,10 +40,10 @@ func New(opts config.PostgresConfig) *PostgresStore {
 	conn.Exec(context.Background(), schema)
 
 	return &PostgresStore{
-		dbpool: conn,
+		db: conn,
 	}
 }
 
 func (s PostgresStore) Close() {
-	s.dbpool.Close()
+	s.db.Close()
 }

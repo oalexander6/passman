@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +11,7 @@ import (
 func (s *Server) handleGetAllNotes(ctx *gin.Context) {
 	notes, err := s.models.NoteGetAll(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{})
+		json(ctx, http.StatusInternalServerError, gin.H{"error": "Something went wrong while getting notes."})
 		return
 	}
 
@@ -21,13 +22,13 @@ func (s *Server) handleCreateNote(ctx *gin.Context) {
 	var createNoteParams models.NoteCreateParams
 
 	if err := ctx.ShouldBind(&createNoteParams); err != nil {
-		ctx.AbortWithStatus(http.StatusBadRequest)
+		json(ctx, http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid request: %s.", err)})
 		return
 	}
 
 	note, err := s.models.NoteCreate(ctx, createNoteParams)
 	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
+		json(ctx, http.StatusInternalServerError, gin.H{"error": "Something went wrong while saving note."})
 		return
 	}
 

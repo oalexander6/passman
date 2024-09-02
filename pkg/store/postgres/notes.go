@@ -26,7 +26,7 @@ func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.NoteCrea
 	currTime := time.Now().UTC().Format(time.RFC3339)
 
 	var insertedID int64
-	if err := s.dbpool.QueryRow(ctx, query, noteInput.Name, noteInput.Value, currTime, currTime, false).Scan(&insertedID); err != nil {
+	if err := s.db.QueryRow(ctx, query, noteInput.Name, noteInput.Value, currTime, currTime, false).Scan(&insertedID); err != nil {
 		return models.Note{}, err
 	}
 
@@ -43,7 +43,7 @@ func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.NoteCrea
 func (s PostgresStore) NoteDeleteByID(ctx context.Context, id int64) error {
 	query := `UPDATE notes SET deleted=true WHERE id=$1;`
 
-	result, err := s.dbpool.Exec(ctx, query, id)
+	result, err := s.db.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (s PostgresStore) NoteDeleteByID(ctx context.Context, id int64) error {
 func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, error) {
 	query := `SELECT * FROM notes WHERE id=$1 AND deleted=false;`
 
-	row, err := s.dbpool.Query(ctx, query, id)
+	row, err := s.db.Query(ctx, query, id)
 	if err != nil {
 		return models.Note{}, err
 	}
@@ -80,7 +80,7 @@ func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, 
 func (s PostgresStore) NoteGetAll(ctx context.Context) ([]models.Note, error) {
 	query := `SELECT * FROM notes WHERE deleted=false;`
 
-	rows, err := s.dbpool.Query(ctx, query)
+	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return []models.Note{}, err
 	}
