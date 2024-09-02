@@ -13,23 +13,24 @@ import (
 
 // Note represents a note/password. The value field will always be stored encrypted.
 type Note struct {
-	ID        int64  `db:"id"`
-	Name      string `db:"name"`
-	Value     string `db:"value"`
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at"`
+	ID        int64
+	Name      string
+	Value     string
+	CreatedAt string
+	UpdatedAt string
+	Deleted   bool
 }
 
 // NoteCreateParams represents the data required to create a new note.
 type NoteCreateParams struct {
-	Name  string `json:"name" form:"name" validate:"required"`
-	Value string `json:"value" form:"value" validate:"required"`
+	Name  string `json:"name" form:"name" binding:"required"`
+	Value string `json:"value" form:"value" binding:"required"`
 }
 
 // NoteCreateRandomParams represents the data required to create a new random note.
 type NoteCreateRandomParams struct {
-	Name   string `json:"name" form:"name" validate:"required"`
-	Length int    `json:"length" form:"length" validate:"required,lte=2048"`
+	Name   string `json:"name" form:"name" binding:"required"`
+	Length int    `json:"length" form:"length" binding:"required,lte=2048"`
 }
 
 // NoteGetResponse represents the data returned for note GET requests.

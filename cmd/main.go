@@ -19,6 +19,8 @@ func main() {
 		logger.Log.Fatal().Msgf("Invalid configuration: %s", err.Error())
 	}
 
+	logger.Log.Info().Interface("config", c).Msg("Config initialized")
+
 	var store models.Store
 
 	switch c.StoreType {
@@ -31,5 +33,6 @@ func main() {
 	defer store.Close()
 
 	app := httpserver.New(c, store)
-	logger.Log.Fatal().Msgf("Application crashed: %s", app.Run().Error())
+
+	app.Run()
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -22,29 +21,27 @@ const (
 
 type PostgresConfig struct {
 	// Postgres connection URI
-	URI string `json:"DB_URI" validate:"required"`
+	URI string `json:"-" validate:"required"`
 }
 
 type EncryptionConfig struct {
 	// Initialization vector for AES encryption
-	EncIV string `json:"ENCRYPTION_IV" validate:"required,len=16"`
+	EncIV string `json:"-" validate:"required,len=16"`
 	// AES encryption secret key
-	EncSecret string `json:"ENCRYPTION_SECERET" validate:"required,len=32"`
+	EncSecret string `json:"-" validate:"required,len=32"`
 }
 
 type Config struct {
 	// LOCAL, DEV, STAGE, PROD
 	Env string `json:"ENV" validate:"required,oneof=LOCAL DEV STAGE PROD"`
+	// Hosts which are permitted to access this server
+	AllowedHost string `json:"ALLOWED_HOST" validate:"required"`
 	// server listen port
 	Port string `json:"PORT" validate:"required,numeric"`
 	// current application version
 	Version string `json:"VERSION" validate:"required"`
 	// encryption key for sessions
 	SecretKey string `json:"-" validate:"required"`
-	// CSRF token secret key
-	CSRFKey string `json:"-" validate:"required_if=EnableCSRFProtection true,len=36"`
-	// use CSRF protections
-	EnableCSRFProtection bool `json:"ENABLE_CSRF_PROTECTION" validate:"boolean"`
 	// store type to use - postgres, sqlite
 	StoreType string `json:"STORE_TYPE" validate:"required,oneof=postgres sqlite"`
 	// Postgres configuration
@@ -65,12 +62,12 @@ func New() *Config {
 	}
 
 	c := &Config{
-		Env:       strings.ToUpper(os.Getenv("ENV")),
-		Port:      os.Getenv("PORT"),
-		Version:   os.Getenv("VERSION"),
-		SecretKey: secretVals["SECRET_KEY"],
-		CSRFKey:   secretVals["CSRF_KEY"],
-		StoreType: os.Getenv("STORE_TYPE"),
+		Env:         strings.ToUpper(os.Getenv("ENV")),
+		Port:        os.Getenv("PORT"),
+		Version:     os.Getenv("VERSION"),
+		SecretKey:   secretVals["SECRET_KEY"],
+		StoreType:   os.Getenv("STORE_TYPE"),
+		AllowedHost: os.Getenv("ALLOWED_HOST"),
 		PostgresOpts: PostgresConfig{
 			URI: os.Getenv("DB_URI"),
 		},
@@ -80,19 +77,13 @@ func New() *Config {
 		},
 	}
 
-	useCSRF, err := strconv.ParseBool(os.Getenv("ENABLE_CSRF_PROTECTION"))
-	if err != nil {
-		panic("Failed to parse value for ENABLE_CSRF_PROTECTION as a bool")
-	}
-	c.EnableCSRFProtection = useCSRF
-
 	return c
 }
 
 func loadSecrets() (map[string]string, error) {
 	loadedVals := make(map[string]string)
 
-	secrets := []string{"SECRET_KEY", "POSTGRES_USER", "POSTGRES_PASSWORD", "CSRF_KEY", "ENCRYPTION_IV", "ENCRYPTION_SECRET"}
+	secrets := []string{"SECRET_KEY", "DB_URI", "ENCRYPTION_IV", "ENCRYPTION_SECRET"}
 
 	for _, baseEnvName := range secrets {
 		// default to non-file variable if provided
