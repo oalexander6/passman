@@ -95,4 +95,35 @@ func TestCreateNote(t *testing.T) {
 	if result.Name != "Test Note 1" || result.Value != "testval1" {
 		t.Fatal("Name or value did not match input")
 	}
+
+	query := `SELECT id, name, value, created_at, updated_at, deleted FROM notes WHERE id=$1;`
+
+	var savedNote postgres.Note
+
+	if err := srv.DB.QueryRow(context.Background(), query, result.ID).
+		Scan(&savedNote.ID, &savedNote.Name, &savedNote.Value, &savedNote.CreatedAt, &savedNote.UpdatedAt, &savedNote.Deleted); err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if savedNote.ID != result.ID || savedNote.Name != "Test Note 1" || savedNote.Value != "testval1" || savedNote.Deleted.Bool {
+		t.Fatal("Saved record did not match expected")
+	}
+}
+
+func TestGetNoteByID(t *testing.T) {
+	srv := postgres.New(pgOpts)
+
+	result, err := srv.NoteCreate(context.Background(), models.NoteCreateParams{Name: "Test Note 2", Value: "testval2"})
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	note, err := srv.NoteGetByID(context.Background(), result.ID)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if note.ID != result.ID || note.Name != "Test Note 2" || note.Value != "testval2" || note.Deleted {
+		t.Fatal("Got an unexpected value")
+	}
 }

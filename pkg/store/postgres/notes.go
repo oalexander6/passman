@@ -10,7 +10,7 @@ import (
 	"github.com/oalexander6/passman/pkg/models"
 )
 
-type note struct {
+type Note struct {
 	ID        int64              `db:"id"`
 	Name      string             `db:"name"`
 	Value     string             `db:"value"`
@@ -26,7 +26,7 @@ func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.NoteCrea
 	currTime := time.Now().UTC().Format(time.RFC3339)
 
 	var insertedID int64
-	if err := s.db.QueryRow(ctx, query, noteInput.Name, noteInput.Value, currTime, currTime, false).Scan(&insertedID); err != nil {
+	if err := s.DB.QueryRow(ctx, query, noteInput.Name, noteInput.Value, currTime, currTime, false).Scan(&insertedID); err != nil {
 		return models.Note{}, err
 	}
 
@@ -43,7 +43,7 @@ func (s PostgresStore) NoteCreate(ctx context.Context, noteInput models.NoteCrea
 func (s PostgresStore) NoteDeleteByID(ctx context.Context, id int64) error {
 	query := `UPDATE notes SET deleted=true WHERE id=$1;`
 
-	result, err := s.db.Exec(ctx, query, id)
+	result, err := s.DB.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -59,13 +59,12 @@ func (s PostgresStore) NoteDeleteByID(ctx context.Context, id int64) error {
 func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, error) {
 	query := `SELECT * FROM notes WHERE id=$1 AND deleted=false;`
 
-	row, err := s.db.Query(ctx, query, id)
+	row, err := s.DB.Query(ctx, query, id)
 	if err != nil {
 		return models.Note{}, err
 	}
 
-	pgx.RowTo[note](row)
-	note, err := pgx.CollectOneRow(row, pgx.RowToStructByName[note])
+	note, err := pgx.CollectOneRow(row, pgx.RowToStructByName[Note])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Note{}, models.ErrNotFound
@@ -80,12 +79,12 @@ func (s PostgresStore) NoteGetByID(ctx context.Context, id int64) (models.Note, 
 func (s PostgresStore) NoteGetAll(ctx context.Context) ([]models.Note, error) {
 	query := `SELECT * FROM notes WHERE deleted=false;`
 
-	rows, err := s.db.Query(ctx, query)
+	rows, err := s.DB.Query(ctx, query)
 	if err != nil {
 		return []models.Note{}, err
 	}
 
-	notes, err := pgx.CollectRows(rows, pgx.RowToStructByName[note])
+	notes, err := pgx.CollectRows(rows, pgx.RowToStructByName[Note])
 	if err != nil {
 		return []models.Note{}, err
 	}
@@ -94,7 +93,7 @@ func (s PostgresStore) NoteGetAll(ctx context.Context) ([]models.Note, error) {
 }
 
 // Converts a DB note struct to a models.Note struct.
-func noteToModel(note note) models.Note {
+func noteToModel(note Note) models.Note {
 	return models.Note{
 		ID:        note.ID,
 		Name:      note.Name,
@@ -106,7 +105,7 @@ func noteToModel(note note) models.Note {
 }
 
 // // Converts a list of DB note structs to a list of models.Note structs.
-func notesToModel(notes []note) []models.Note {
+func notesToModel(notes []Note) []models.Note {
 	results := make([]models.Note, len(notes))
 
 	for i := range notes {
