@@ -3,6 +3,7 @@ package httpserver
 import (
 	"net/http"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/config"
 	"github.com/oalexander6/passman/pkg/logger"
@@ -14,6 +15,11 @@ func (s *Server) createRouter() *gin.Engine {
 
 	r.Use(gin.Recovery())
 	r.Use(gin.LoggerWithWriter(logger.Log))
+
+	if s.config.Env != config.LOCAL_ENV {
+		r.Use(static.Serve("/", static.LocalFile("./web/dist", true)))
+	}
+
 	r.Use(requestIDMiddleware)
 	r.Use(getSecurityHeadersMiddleware(s.config.AllowedHost))
 	r.Use(csrfHeaderMiddleware)
@@ -22,9 +28,12 @@ func (s *Server) createRouter() *gin.Engine {
 		r.Use(getCORSMiddleware())
 	}
 
-	r.GET("/", s.hello)
-	r.GET("/notes", s.handleGetAllNotes)
-	r.POST("/notes", s.handleCreateNote)
+	apiGroup := r.Group("/api")
+	{
+		apiGroup.GET("/", s.hello)
+		apiGroup.GET("/notes", s.handleGetAllNotes)
+		apiGroup.POST("/notes", s.handleCreateNote)
+	}
 
 	return r
 }

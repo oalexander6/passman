@@ -17,10 +17,10 @@ func requestIDMiddleware(ctx *gin.Context) {
 
 func getSecurityHeadersMiddleware(allowedHost string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if ctx.Request.Header["Origin"][0] != allowedHost {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid host header"})
-			return
-		}
+		// if ctx.Request.Header["Origin"][0] != allowedHost {
+		// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid host header"})
+		// 	return
+		// }
 
 		ctx.Header("X-Frame-Options", "DENY")
 		ctx.Header("Content-Security-Policy", "default-src 'self'; connect-src *; font-src *; script-src-elem * 'unsafe-inline'; img-src * data:; style-src * 'unsafe-inline';")
