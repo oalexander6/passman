@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oalexander6/passman/config"
 	"github.com/oalexander6/passman/pkg/logger"
 )
 
@@ -15,6 +16,11 @@ func (s *Server) createRouter() *gin.Engine {
 	r.Use(gin.LoggerWithWriter(logger.Log))
 	r.Use(requestIDMiddleware)
 	r.Use(getSecurityHeadersMiddleware(s.config.AllowedHost))
+	r.Use(csrfHeaderMiddleware)
+
+	if s.config.Env == config.LOCAL_ENV {
+		r.Use(getCORSMiddleware())
+	}
 
 	r.GET("/", s.hello)
 	r.GET("/notes", s.handleGetAllNotes)
