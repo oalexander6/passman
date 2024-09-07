@@ -8,6 +8,8 @@ import {
     MenuItems,
 } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 const user = {
     name: 'Tom Cook',
@@ -33,6 +35,11 @@ function classNames(...classes: string[]) {
 }
 
 export default function Example() {
+    const { isPending, isError, data, error } = useQuery({
+        queryKey: ['hellomsg'],
+        queryFn: () => axios.get('/api').then(res => res.data)
+    });
+
     return (
         <>
             {/*
@@ -230,7 +237,7 @@ export default function Example() {
                     <header className="py-10">
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                             <h1 className="text-3xl font-bold tracking-tight text-white">
-                                Dashboard
+                                Dashboard - {data}
                             </h1>
                         </div>
                     </header>
@@ -239,7 +246,9 @@ export default function Example() {
                 <main className="-mt-32">
                     <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
                         <div className="rounded-lg bg-white px-5 py-6 shadow sm:px-6">
-                            {/* Your content */}
+                            Is Pending: {isPending}
+                            Is Error: {isError}
+                            Error: {error?.message}
                         </div>
                     </div>
                 </main>

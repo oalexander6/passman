@@ -21,16 +21,12 @@ func (s *Server) createRouter() *gin.Engine {
 	}
 
 	r.Use(requestIDMiddleware)
-	r.Use(getSecurityHeadersMiddleware(s.config.AllowedHost))
+	r.Use(getSecurityHeadersMiddleware())
 	r.Use(csrfHeaderMiddleware)
-
-	if s.config.Env == config.LOCAL_ENV {
-		r.Use(getCORSMiddleware())
-	}
 
 	apiGroup := r.Group("/api")
 	{
-		apiGroup.GET("/", s.hello)
+		apiGroup.GET("", s.hello)
 		apiGroup.GET("/notes", s.handleGetAllNotes)
 		apiGroup.POST("/notes", s.handleCreateNote)
 	}

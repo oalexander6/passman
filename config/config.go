@@ -34,8 +34,6 @@ type EncryptionConfig struct {
 type Config struct {
 	// LOCAL, DEV, STAGE, PROD
 	Env string `json:"ENV" validate:"required,oneof=LOCAL DEV STAGE PROD"`
-	// Hosts which are permitted to access this server
-	AllowedHost string `json:"ALLOWED_HOST" validate:"required"`
 	// server listen port
 	Port string `json:"PORT" validate:"required,numeric"`
 	// current application version
@@ -62,12 +60,11 @@ func New() *Config {
 	}
 
 	c := &Config{
-		Env:         strings.ToUpper(os.Getenv("ENV")),
-		Port:        os.Getenv("PORT"),
-		Version:     os.Getenv("VERSION"),
-		SecretKey:   secretVals["SECRET_KEY"],
-		StoreType:   os.Getenv("STORE_TYPE"),
-		AllowedHost: os.Getenv("ALLOWED_HOST"),
+		Env:       strings.ToUpper(os.Getenv("ENV")),
+		Port:      os.Getenv("PORT"),
+		Version:   os.Getenv("VERSION"),
+		SecretKey: secretVals["SECRET_KEY"],
+		StoreType: os.Getenv("STORE_TYPE"),
 		PostgresOpts: PostgresConfig{
 			URI: os.Getenv("DB_URI"),
 		},
