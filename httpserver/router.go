@@ -1,15 +1,14 @@
 package httpserver
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/config"
-	"github.com/oalexander6/passman/pkg/logger"
+	"github.com/oalexander6/passman/logger"
+	"github.com/oalexander6/passman/models"
 )
 
-func (s *Server) createRouter() *gin.Engine {
+func (s *Server) createRouter(m models.Models) *gin.Engine {
 	r := gin.New()
 	r.SetTrustedProxies(nil)
 
@@ -24,16 +23,12 @@ func (s *Server) createRouter() *gin.Engine {
 	r.Use(getSecurityHeadersMiddleware())
 	r.Use(csrfHeaderMiddleware)
 
-	apiGroup := r.Group("/api")
+	apiGroup := r.Group("/api/v1")
 	{
-		apiGroup.GET("", s.hello)
-		apiGroup.GET("/notes", s.handleGetAllNotes)
-		apiGroup.POST("/notes", s.handleCreateNote)
+		apiGroup.GET("", HandleHello())
+		apiGroup.GET("/notes", HandleGetAllNotes(m))
+		apiGroup.POST("/notes", HandleCreateNote(m))
 	}
 
 	return r
-}
-
-func (s *Server) hello(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Ok")
 }

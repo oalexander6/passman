@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/oalexander6/passman/config"
-	"github.com/oalexander6/passman/pkg/logger"
+	"github.com/oalexander6/passman/logger"
 )
 
 type PostgresStore struct {

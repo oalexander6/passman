@@ -173,7 +173,7 @@ func generateRandomString(length int, validCharacters string) (string, error) {
 
 // Encrypt implements AES-256 encryption using PKCS7 padding.
 func (m *Models) Encrypt(plaintext []byte) (string, error) {
-	block, err := aes.NewCipher([]byte(m.config.Encryption.EncSecret))
+	block, err := aes.NewCipher([]byte(m.encyrptionOpts.EncSecret))
 	if err != nil {
 		return "", err
 	}
@@ -182,7 +182,7 @@ func (m *Models) Encrypt(plaintext []byte) (string, error) {
 
 	ciphertext := make([]byte, len(paddedPlaintext))
 
-	mode := cipher.NewCBCEncrypter(block, []byte(m.config.Encryption.EncIV))
+	mode := cipher.NewCBCEncrypter(block, []byte(m.encyrptionOpts.EncIV))
 	mode.CryptBlocks(ciphertext, paddedPlaintext)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
@@ -195,12 +195,12 @@ func (m *Models) Decyrpt(encrypted []byte) (string, error) {
 		return "", err
 	}
 
-	block, err := aes.NewCipher([]byte(m.config.Encryption.EncSecret))
+	block, err := aes.NewCipher([]byte(m.encyrptionOpts.EncSecret))
 	if err != nil {
 		return "", err
 	}
 
-	mode := cipher.NewCBCDecrypter(block, []byte(m.config.Encryption.EncIV))
+	mode := cipher.NewCBCDecrypter(block, []byte(m.encyrptionOpts.EncIV))
 	mode.CryptBlocks(ciphertext, ciphertext)
 
 	plaintext, err := pkcs7UnPad(ciphertext, block.BlockSize())

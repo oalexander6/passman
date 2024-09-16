@@ -1,12 +1,6 @@
-passman-config.*
-!passman-config.*.template
-*_templ.go
-dist/
-main
-tmp/
-.vscode
-*_templ.txt
-/config/secrets/*
-/config/authelia/*
-.env
+.vscode/
+.env*
+!.env.template
 __debug*
+node_modules/
+web/dist/

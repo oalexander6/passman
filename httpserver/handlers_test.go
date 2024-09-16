@@ -9,9 +9,8 @@ import (
 )
 
 func TestHelloWorldHandler(t *testing.T) {
-	s := &Server{}
 	r := gin.New()
-	r.GET("/", s.hello)
+	r.GET("/", HandleHello())
 
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {

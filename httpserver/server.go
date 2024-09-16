@@ -10,29 +10,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oalexander6/passman/config"
-	"github.com/oalexander6/passman/pkg/logger"
-	"github.com/oalexander6/passman/pkg/models"
+	"github.com/oalexander6/passman/logger"
+	"github.com/oalexander6/passman/models"
 )
 
 type Server struct {
 	config *config.Config
-	models *models.Models
 	router http.Handler
 }
 
 // Initializes a new instance of a Gin HTTP server. If the environment set in the provided
 // config is PROD, Gin will run in release mode, otherwise debug mode.
-func New(conf *config.Config, store models.Store) *Server {
+func New(conf *config.Config, m models.Models) *Server {
 	if conf.Env == config.PROD_ENV {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	s := &Server{
 		config: conf,
-		models: models.New(store, conf),
 	}
 
-	s.router = s.createRouter()
+	s.router = s.createRouter(m)
 
 	return s
 }

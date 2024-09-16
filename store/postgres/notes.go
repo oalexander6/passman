@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/oalexander6/passman/pkg/models"
+	"github.com/oalexander6/passman/models"
 )
 
 type Note struct {

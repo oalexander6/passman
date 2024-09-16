@@ -1,11 +1,8 @@
-version: "3.9"
-
 services:
-  passman: 
-    container_name: passman
+  passman:
     build: .
     env_file:
-      - .env
+      - .env.docker
     environment:
       POSTGRES_HOST: postgres
     ports:

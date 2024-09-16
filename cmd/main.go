@@ -4,10 +4,10 @@ import (
 	"os"
 
 	"github.com/oalexander6/passman/config"
-	"github.com/oalexander6/passman/pkg/httpserver"
-	"github.com/oalexander6/passman/pkg/logger"
-	"github.com/oalexander6/passman/pkg/models"
-	"github.com/oalexander6/passman/pkg/store/postgres"
+	"github.com/oalexander6/passman/httpserver"
+	"github.com/oalexander6/passman/logger"
+	"github.com/oalexander6/passman/models"
+	"github.com/oalexander6/passman/store/postgres"
 	"github.com/rs/zerolog"
 )
 
@@ -21,18 +21,18 @@ func main() {
 
 	logger.Log.Info().Interface("config", c).Msg("Config initialized")
 
-	var store models.Store
+	var s models.Store
 
 	switch c.StoreType {
 	case config.STORE_TYPE_POSTGRES:
-		store = postgres.New(c.PostgresOpts)
+		s = postgres.New(c.PostgresOpts)
 	default:
 		logger.Log.Fatal().Msgf("Invalid store type: %s", c.StoreType)
 	}
 
-	defer store.Close()
+	defer s.Close()
 
-	app := httpserver.New(c, store)
+	app := httpserver.New(c, *models.New(s, c.Encryption))
 
 	app.Run()
 }
