@@ -1,5 +1,5 @@
 import { CircleUser, Menu, Package2, Search } from 'lucide-react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,8 +12,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+import { twMerge } from 'tailwind-merge';
+import { ThemeToggle } from './theme-toggle';
+
+const navLinks = [
+  {
+    title: "Dashboard",
+    link: "/"
+  },
+  {
+    title: "Passwords",
+    link: "/passwords"
+  }
+];
 
 export default function Navbar() {
+  let location = useLocation();
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -23,38 +39,16 @@ export default function Navbar() {
             className="flex items-center gap-2 text-lg font-semibold md:text-base"
           >
             <Package2 className="h-6 w-6" />
-            <span className="sr-only">Acme Inc</span>
+            <span className="sr-only">Passman</span>
           </a>
-          <a
-            href="#"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Dashboard
-          </a>
-          <a
-            href="#"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Orders
-          </a>
-          <a
-            href="#"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Products
-          </a>
-          <a
-            href="#"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Customers
-          </a>
-          <a
-            href="#"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Analytics
-          </a>
+          {navLinks.map((page) =>
+            <a
+              href={page.link}
+              className={twMerge("text-muted-foreground transition-colors hover:text-foreground", location.pathname.startsWith(page.link) ? "text-foreground" : "")}
+            >
+              {page.title}
+            </a>
+          )}
         </nav>
         <Sheet>
           <SheetTrigger asChild>
@@ -74,40 +68,21 @@ export default function Navbar() {
                 className="flex items-center gap-2 text-lg font-semibold"
               >
                 <Package2 className="h-6 w-6" />
-                <span className="sr-only">Acme Inc</span>
+                <span className="sr-only">Passman</span>
               </a>
-              <a href="#" className="hover:text-foreground">
-                Dashboard
-              </a>
-              <a
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Orders
-              </a>
-              <a
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Products
-              </a>
-              <a
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Customers
-              </a>
-              <a
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Analytics
-              </a>
+              {navLinks.map((page) =>
+                <a
+                  href={page.link}
+                  className={twMerge("hover:text-foreground", !location.pathname.startsWith(page.link) ? "text-muted-foreground" : "")}
+                >
+                  {page.title}
+                </a>
+              )}
             </nav>
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <form className="ml-auto flex-1 sm:flex-initial">
+          <div className="ml-auto flex-1 sm:flex-initial">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -116,7 +91,8 @@ export default function Navbar() {
                 className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
               />
             </div>
-          </form>
+          </div>
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -128,9 +104,7 @@ export default function Navbar() {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem className="dark:text-red-400 text-red-600">Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
